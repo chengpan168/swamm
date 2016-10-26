@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.tools.doclets.internal.toolkit.util.DocletConstants;
+import com.sun.tools.javadoc.FieldDocImpl;
+import com.swamm.doc.DocletTree;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -24,6 +27,8 @@ import com.swamm.doc.MethodModel;
  * Created by chengpanwang on 2016/10/20.
  */
 public class DocletUtil {
+
+    public static DocletTree docletTree = new DocletTree();
 
     public static List<MethodModel> getMethodModels(ClassDoc classDoc) {
 
@@ -72,17 +77,7 @@ public class DocletUtil {
         }
 
         //属性泛型
-        Map<String, String> genericTypeMap = new HashMap<>();
-        if (type.asParameterizedType() != null && type.asParameterizedType().typeArguments() != null
-            && type.asParameterizedType().typeArguments().length > 0) {
-            for (int i = 0; i < type.asParameterizedType().typeArguments().length; i++) {
-                genericTypeMap.put(type.asClassDoc().typeParameters()[i].qualifiedTypeName(),
-                                   type.asParameterizedType().typeArguments()[i].qualifiedTypeName());
-            }
-        }
-        if (genericTypeMap.size() > 0) {
-            DocletLog.log("使用泛型：" + genericTypeMap);
-        }
+        Map<String, Type> genericTypeMap = ClassUtil.getGenericTypeMap(type);
 
         FieldModel returnModel = new FieldModel();
 
@@ -94,14 +89,16 @@ public class DocletUtil {
                 break;
             }
         }
-        returnModel.setType(type.qualifiedTypeName());
+        returnModel.setType(type);
+
+        DocletTree.Node node = docletTree.add(methodDoc.flatSignature());
 
         List<FieldModel> fieldModels = new ArrayList<>();
         for (FieldDoc fieldDoc : getAllField(type.asClassDoc())) {
             if (fieldDoc.isStatic()) {
                 continue;
             }
-            fieldModels.add(getFieldModel(type.qualifiedTypeName(), fieldDoc, genericTypeMap));
+            fieldModels.add(getFieldModel(type, fieldDoc, genericTypeMap, node));
         }
 
         returnModel.setInnerField(fieldModels);
@@ -109,73 +106,111 @@ public class DocletUtil {
         return returnModel;
     }
 
-    public static FieldModel getFieldModel(String parentTypeName, FieldDoc fieldDoc, Map<String, String> genericTypeMap) {
+    public static FieldModel getFieldModel(Type parentType, FieldDoc fieldDoc, Map<String, Type> genericTypeMap, DocletTree.Node node) {
+
+        String parentTypeName = parentType.qualifiedTypeName();
+
         FieldModel fieldModel = new FieldModel();
 
         fieldModel.setDesc(StringUtils.defaultIfBlank(fieldDoc.commentText(), fieldDoc.name()));
         fieldModel.setName(fieldDoc.name());
-        fieldModel.setType(fieldDoc.type().qualifiedTypeName());
+
+        // 设置属性类型，或者是泛型
+        if (genericTypeMap.containsKey(fieldDoc.type().qualifiedTypeName())) {
+            Type type = genericTypeMap.get(fieldDoc.type().qualifiedTypeName());
+            DocletLog.log("类型：" + parentTypeName + "，子属性: " + fieldDoc.name() + "使用了泛型：" + type);
+            fieldModel.setType(type);
+        } else {
+            fieldModel.setType(fieldDoc.type());
+        }
 
         DocletLog.log("获取属性子属性: " + fieldDoc.name() + "， 父类：" + parentTypeName + "");
-        if (!StringUtils.equals(parentTypeName, getGenericTypeName(fieldDoc, genericTypeMap))) {
-            fieldModel.setInnerField(getInnerField(fieldDoc, genericTypeMap));
+
+        return getFieldModel(parentType, fieldModel, genericTypeMap);
+    }
+
+
+    public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap) {
+        String parentTypeName = parentType.qualifiedTypeName();
+        if (!ClassUtil.isCollection(parentType) && StringUtils.equals(parentTypeName, fieldModel.getType().qualifiedTypeName())) {
+            DocletLog.log("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 是父类不再递归");
         } else {
-            DocletLog.log("获取属性子属性, 泛型是父类， 不再递归");
+            if (!isGetInnerField(fieldModel.getType())) {
+                fieldModel.setInnerField(getInnerField(fieldModel, genericTypeMap));
+            }
         }
         return fieldModel;
     }
 
-    public static List<FieldModel> getInnerField(FieldDoc fieldDoc, Map<String, String> genericTypeMap) {
-        Type type = fieldDoc.type();
+    public static List<FieldModel> getInnerField(FieldModel fieldModel, Map<String, Type> genericTypeMap) {
+        Type type = fieldModel.getType();
+        String name = fieldModel.getName();
 
-        if (ClassUtil.isPrimitiveOrWrapper(type) || fieldDoc.isStatic()) {
+        if (ClassUtil.isPrimitiveOrWrapper(type)) {
             return Collections.emptyList();
         }
 
-        ClassDoc classDoc = type.asClassDoc();
+        // 检查属性类型是不是泛型
+        if (genericTypeMap.containsKey(type.qualifiedTypeName())) {
+            type = genericTypeMap.get(type.qualifiedTypeName());
+            DocletLog.log("获取属性：" + name + ", 子属性, 使用了泛型：" + type);
+        } else {
+            //ignore
+        }
+
         List<FieldModel> fieldModels = new ArrayList<>();
 
-        // 解析泛型
         FieldDoc[] fields = null;
-        String genericTypeName = null;
-        if (classDoc.subclassOf(classDoc.findClass("java.util.Collection"))) {
-            if (type.asParameterizedType() != null && type.asParameterizedType().typeArguments() != null
-                && type.asParameterizedType().typeArguments().length > 0) {
-                DocletLog.log("获取内部属性: " + fieldDoc.name() + " 泛型解析");
+        Type parentType = type;
 
-                Type genericType = type.asParameterizedType().typeArguments()[0];
+        // 如果是集合类型
+        if (ClassUtil.isCollection(type)) {
 
-                genericTypeName = genericType.qualifiedTypeName();
+            List<Type> genericTypeList = ClassUtil.getGenericType(type);
+            if (!genericTypeList.isEmpty()) {
+                Type genericType = genericTypeList.get(0);
+
                 // 如果是基本类型
                 if (ClassUtil.isPrimitiveWrapper(genericType)) {
-                    DocletLog.log("获取内部属性，泛型是基础类型：" + genericTypeName);
+                    DocletLog.log("集合属性：" + name + "，泛型是基本类型：" + genericType);
                 }
-                // 如果是父类声明的类型
-                else if (genericTypeMap.containsKey(genericTypeName)) {
-                    genericTypeName = genericTypeMap.get(genericTypeName);
-                    DocletLog.log("获取内部属性，泛型是继承类型：" + genericTypeName);
 
-                    fields = classDoc.findClass(genericTypeName).fields();
+                // 集合使用了泛型 private List<T> result;
+                else if (genericTypeMap.containsKey(genericType.qualifiedTypeName())) {
+                    parentType = genericTypeMap.get(genericType.qualifiedTypeName());
+
+                    if (ClassUtil.isCollection(parentType)) {
+                        DocletLog.log("集合属性：" + name + " ，是泛型集合类型：" + parentType);
+                        return Arrays.asList(getFieldModel(parentType, new FieldModel(parentType), genericTypeMap));
+                    }
+
+                    DocletLog.log("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
+                    fields = parentType.asClassDoc().fields();
+
+
                 }
-                // 是自已定义的类型
+                // 复杂类型
                 else {
-                    DocletLog.log("获取内部属性，泛型是自已定义的类型：" + genericTypeName );
 
-                    fields = classDoc.findClass(genericTypeName).fields();
+                    if (ClassUtil.isCollection(genericType.asClassDoc())) {
+                        DocletLog.log("集合属性：" + name + " ，是集合类型：" + genericType);
+                        return Arrays.asList(getFieldModel(parentType, new FieldModel(genericType), genericTypeMap));
+                    }
+
+                    DocletLog.log("集合属性：" + name + " ，是复杂类型：" + genericType);
+                    fields = genericType.asClassDoc().fields();
+                    parentType = genericType;
                 }
-            }
-        }
-        /**
-         * 例如  private T result;
-         */
-        else if (genericTypeMap.containsKey(type.qualifiedTypeName())){
-            genericTypeName = genericTypeMap.get(type.qualifiedTypeName());
-            DocletLog.log("获取内部属性，泛型是继承类型：" + type.qualifiedTypeName() + " , " + genericTypeName);
 
-            fields = classDoc.findClass(genericTypeName).fields();
+            } else {
+                DocletLog.log("集合属性：" + name + " 泛型没有指定：" + type);
+            }
+
         }
+
         else {
-            fields = classDoc.fields();
+            DocletLog.log("获取属性：" + name + ", 子属性， 属性类型：" + type);
+            fields = type.asClassDoc().fields();
         }
 
         if (fields != null && fields.length > 0) {
@@ -183,11 +218,20 @@ public class DocletUtil {
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
                 }
-                fieldModels.add(getFieldModel(genericTypeName, innerFieldDoc, genericTypeMap));
+                fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap));
             }
         }
 
         return fieldModels;
+    }
+
+    public static boolean isGetInnerField(Type type) {
+
+        if (ClassUtil.isPrimitiveOrWrapper(type)) {
+            return true;
+        }
+
+        return false;
     }
 
     public static boolean isFieldIgnore(FieldDoc fieldDoc) {
@@ -201,54 +245,6 @@ public class DocletUtil {
         }
 
         return false;
-    }
-
-    public static String getGenericTypeName(FieldDoc fieldDoc, Map<String, String> genericTypeMap) {
-        Type type = fieldDoc.type();
-
-        if (ClassUtil.isPrimitiveOrWrapper(type) || fieldDoc.isStatic()) {
-            return null;
-        }
-
-        ClassDoc classDoc = type.asClassDoc();
-
-
-        String genericTypeName = null;
-        if (classDoc.subclassOf(classDoc.findClass("java.util.Collection"))) {
-            if (type.asParameterizedType() != null && type.asParameterizedType().typeArguments() != null
-                && type.asParameterizedType().typeArguments().length > 0) {
-                DocletLog.log("解析属性泛型: " + fieldDoc.name() + "");
-
-                Type genericType = type.asParameterizedType().typeArguments()[0];
-
-                genericTypeName = genericType.qualifiedTypeName();
-                // 如果是基本类型
-                if (ClassUtil.isPrimitiveWrapper(genericType)) {
-                    DocletLog.log("泛型是基础类型：" + genericTypeName);
-                }
-                // 如果是父类声明的类型
-                else if (genericTypeMap.containsKey(genericTypeName)) {
-                    genericTypeName = genericTypeMap.get(genericTypeName);
-                    DocletLog.log("泛型是继承类型：" + genericTypeName);
-
-                }
-                // 是自已定义的类型
-                else {
-                    DocletLog.log("泛型是自已定义的类型：" + genericTypeName );
-                }
-            }
-        }
-        /**
-         * 例如  private T result;
-         */
-        else if (genericTypeMap.containsKey(type.qualifiedTypeName())){
-            genericTypeName = genericTypeMap.get(type.qualifiedTypeName());
-            DocletLog.log("泛型是继承类型：" + type.qualifiedTypeName() + " , " + genericTypeName);
-
-        }
-
-
-        return genericTypeName;
     }
 
     /**
@@ -272,7 +268,7 @@ public class DocletUtil {
             FieldModel paramModel = new FieldModel();
             paramModel.setName(param.name());
             paramModel.setDesc(getParamDesc(methodDoc, param));
-            paramModel.setType(param.type().qualifiedTypeName());
+            paramModel.setType(param.type());
 
             // 如果参数是类，取出内部参数
             paramModel.setInnerField(getInnerParam(methodDoc, param));
@@ -291,15 +287,15 @@ public class DocletUtil {
         List<FieldModel> innerParamModels = new ArrayList<>();
 
         for (FieldDoc fieldDoc : getFilterField(methodDoc, parameter)) {
-            if (fieldDoc.isStatic()) {
+            if (isFieldIgnore(fieldDoc)) {
                 continue;
             }
 
             FieldModel paramModel = new FieldModel();
 
-            paramModel.setType(fieldDoc.type().qualifiedTypeName());
+            paramModel.setType(fieldDoc.type());
             paramModel.setName(fieldDoc.name());
-            paramModel.setDesc(fieldDoc.commentText());
+            paramModel.setDesc(StringUtils.defaultIfBlank(fieldDoc.commentText(), fieldDoc.name()));
 
             innerParamModels.add(paramModel);
         }

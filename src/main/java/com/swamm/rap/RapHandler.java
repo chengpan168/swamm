@@ -10,6 +10,11 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.Type;
+import com.swamm.common.ClassUtil;
+import com.swamm.common.DocletContext;
 import com.swamm.common.HttpUtils;
 import com.swamm.doc.ClassModel;
 import com.swamm.doc.FieldModel;
@@ -30,7 +35,7 @@ public class RapHandler implements Handler {
     int moduleId = 38;
 
     @Override
-    public void execute(List<ClassModel> classModels, Map<String, String> options) {
+    public void execute(RootDoc rootDoc, List<ClassModel> classModels, Map<String, String> options) {
 
         String project = HttpUtils.doPost(host + loadUrl, Collections.singletonMap("projectId", projectId));
 
@@ -83,7 +88,7 @@ public class RapHandler implements Handler {
 
                 action.setRequestParameterList(convertParameter(methodModel.getParamModels()));
 
-                action.setResponseParameterList(convertParameter(methodModel.getReturnModel()));
+                action.setResponseParameterList(convertParameter(methodModel.getReturnModel().getInnerField()));
 
                 actionList.add(action);
             }
@@ -111,6 +116,7 @@ public class RapHandler implements Handler {
     public int getId() {
         return --id;
     }
+
 
     private void save(Project p, List<ObjectItem> deleteList) {
         String res = null;
@@ -160,7 +166,8 @@ public class RapHandler implements Handler {
             Parameter parameter = new Parameter();
             parameter.setIdentifier(fieldModel.getName());
             parameter.setName(i++ + ":" + fieldModel.getDesc());
-            parameter.setDataType("object");
+
+            parameter.setDataType(getDataType(fieldModel));
             parameter.setRemark(fieldModel.getDesc());
 
             parameter.setParameterList(convertParameter(fieldModel.getInnerField()));
@@ -172,6 +179,36 @@ public class RapHandler implements Handler {
         return requestParameterList;
 
 
+    }
+
+    private String getDataType(FieldModel fieldModel) {
+        Type fieldType = fieldModel.getType();
+
+        ClassDoc classDoc = fieldType.asClassDoc();
+        if (classDoc != null) {
+            if (classDoc.subclassOf(DocletContext.getRootDoc().classNamed("java.util.Collection"))) {
+                List<Type> genericType = ClassUtil.getGenericType(fieldType);
+                if (genericType.isEmpty()) {
+                    return "array";
+                }
+
+                return "array<" + getDataType(genericType.get(0)) + ">";
+            }
+        }
+
+        return getDataType(fieldType);
+    }
+
+    private String getDataType(Type fieldType) {
+        if (ClassUtil.isNumber(fieldType.qualifiedTypeName())) {
+            return "number";
+        } else if (ClassUtil.isString(fieldType.qualifiedTypeName())) {
+            return "string";
+        } else if (ClassUtil.isBoolean(fieldType.qualifiedTypeName())) {
+            return "boolean";
+        }
+
+        return "object";
     }
 
 
