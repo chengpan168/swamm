@@ -23,7 +23,7 @@ public class HttpUtils {
 
     public static final String USER_AGENT_DEFAULT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.58 Safari/537.36s";
     public static final String CHARSET_UTF8       = "UTF-8";
-    public static final String COOKIE       = "JSESSIONID=1838DA576B2F3F83BAB58E231F5B70BF";
+    public static final String COOKIE       = "JSESSIONID=DA6A0F4DEABDE86C7E6570CBF56F8F01";
 
 
 

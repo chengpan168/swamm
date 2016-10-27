@@ -8,9 +8,10 @@ import com.sun.javadoc.RootDoc;
  */
 public class DocletContext {
 
-    private static RootDoc  ROOT_DOC             = null;
-    public  static ClassDoc COLLECTION_CLASS_DOC = null;
-    private static boolean  init                 = false;
+    private static RootDoc ROOT_DOC             = null;
+    public static ClassDoc COLLECTION_CLASS_DOC = null;
+    public static int      FIELD_DEEP           = 3;
+    private static boolean init                 = false;
 
     public static void init(RootDoc rootDoc) {
         ROOT_DOC = rootDoc;
@@ -22,7 +23,6 @@ public class DocletContext {
         checkInit();
         return ROOT_DOC;
     }
-
 
     private static void checkInit() {
         if (!init) {

@@ -32,7 +32,7 @@ public class DocletTree {
         private Node       parent;
         private List<Node> children;
 
-        public void addChildren(Node node) {
+        public Node addChildren(Node node) {
             if (node == null) {
                 throw new RuntimeException("tree node 不能为空");
             }
@@ -42,6 +42,12 @@ public class DocletTree {
 
             node.setParent(this);
             children.add(node);
+
+            return node;
+        }
+        public Node addChildren(String name) {
+            Node node = new Node(name);
+            return addChildren(node);
         }
 
         public String getName() {
@@ -66,6 +72,20 @@ public class DocletTree {
 
         public void setChildren(List<Node> children) {
             this.children = children;
+        }
+
+        public int deep() {
+            if (this.parent == null) {
+                return 0;
+            }
+
+            int deep = 1;
+            Node parent = this.getParent();
+            while (parent != null) {
+                deep ++;
+                parent = parent.getParent();
+            }
+            return deep;
         }
     }
 }

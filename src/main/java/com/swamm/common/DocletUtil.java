@@ -126,23 +126,23 @@ public class DocletUtil {
 
         DocletLog.log("获取属性子属性: " + fieldDoc.name() + "， 父类：" + parentTypeName + "");
 
-        return getFieldModel(parentType, fieldModel, genericTypeMap);
+        return getFieldModel(parentType, fieldModel, genericTypeMap, node);
     }
 
 
-    public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap) {
+    public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap, DocletTree.Node node) {
         String parentTypeName = parentType.qualifiedTypeName();
-        if (!ClassUtil.isCollection(parentType) && StringUtils.equals(parentTypeName, fieldModel.getType().qualifiedTypeName())) {
-            DocletLog.log("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 是父类不再递归");
+        if (node.deep() > DocletContext.FIELD_DEEP) {
+            DocletLog.log("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 递归深度超过：" + DocletContext.FIELD_DEEP);
         } else {
             if (!isGetInnerField(fieldModel.getType())) {
-                fieldModel.setInnerField(getInnerField(fieldModel, genericTypeMap));
+                fieldModel.setInnerField(getInnerField(fieldModel, genericTypeMap, node));
             }
         }
         return fieldModel;
     }
 
-    public static List<FieldModel> getInnerField(FieldModel fieldModel, Map<String, Type> genericTypeMap) {
+    public static List<FieldModel> getInnerField(FieldModel fieldModel, Map<String, Type> genericTypeMap, DocletTree.Node node) {
         Type type = fieldModel.getType();
         String name = fieldModel.getName();
 
@@ -181,7 +181,7 @@ public class DocletUtil {
 
                     if (ClassUtil.isCollection(parentType)) {
                         DocletLog.log("集合属性：" + name + " ，是泛型集合类型：" + parentType);
-                        return Arrays.asList(getFieldModel(parentType, new FieldModel(parentType), genericTypeMap));
+                        return Arrays.asList(getFieldModel(parentType, new FieldModel(parentType), genericTypeMap, node.addChildren(name)));
                     }
 
                     DocletLog.log("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
@@ -194,7 +194,7 @@ public class DocletUtil {
 
                     if (ClassUtil.isCollection(genericType.asClassDoc())) {
                         DocletLog.log("集合属性：" + name + " ，是集合类型：" + genericType);
-                        return Arrays.asList(getFieldModel(parentType, new FieldModel(genericType), genericTypeMap));
+                        return Arrays.asList(getFieldModel(parentType, new FieldModel(genericType), genericTypeMap, node.addChildren(name)));
                     }
 
                     DocletLog.log("集合属性：" + name + " ，是复杂类型：" + genericType);
@@ -218,7 +218,7 @@ public class DocletUtil {
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
                 }
-                fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap));
+                fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
             }
         }
 

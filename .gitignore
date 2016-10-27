@@ -70,7 +70,6 @@ fabric.properties
 
 .idea/
 .DS_Store
-lib/
 swamm.iml
 
 .gitignore
