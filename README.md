@@ -93,3 +93,356 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
         // 后面省略。。。。。。。。
      }
 ```
+
+
+# 解析结果示例：
+
+```
+[
+  {
+    "desc": "",
+    "methodModels": [
+      {
+        "desc": "",
+        "name": "createClassify",
+        "paramModels": [
+          {
+            "desc": "classifyDto",
+            "innerField": [
+              {
+                "desc": "type",
+                "name": "type",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "name",
+                "name": "name",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "level",
+                "name": "level",
+                "typeName": "java.lang.Long"
+              },
+              {
+                "desc": "sort",
+                "name": "sort",
+                "typeName": "java.lang.Long"
+              },
+              {
+                "desc": "parentId",
+                "name": "parentId",
+                "typeName": "java.lang.Long"
+              },
+              {
+                "desc": "isView",
+                "name": "isView",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "children",
+                "name": "children",
+                "typeName": "java.util.List"
+              },
+              {
+                "desc": "firstName",
+                "name": "firstName",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "firstId",
+                "name": "firstId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "firstParentId",
+                "name": "firstParentId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "secondName",
+                "name": "secondName",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "secondId",
+                "name": "secondId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "secondParentId",
+                "name": "secondParentId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "thirdName",
+                "name": "thirdName",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "thirdId",
+                "name": "thirdId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "thirdParentId",
+                "name": "thirdParentId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "Id",
+                "name": "Id",
+                "typeName": "java.lang.Long"
+              },
+              {
+                "desc": "gmtCreate",
+                "name": "gmtCreate",
+                "typeName": "java.util.Date"
+              },
+              {
+                "desc": "gmtModified",
+                "name": "gmtModified",
+                "typeName": "java.util.Date"
+              },
+              {
+                "desc": "isDeleted",
+                "name": "isDeleted",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "creator",
+                "name": "creator",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "modifier",
+                "name": "modifier",
+                "typeName": "java.lang.String"
+              }
+            ],
+            "name": "classifyDto",
+            "typeName": "com.xxx.pangu.client.dto.ClassifyDto"
+          },
+          {
+            "desc": "pvg",
+            "innerField": [
+              {
+                "desc": "language",
+                "name": "language",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "userId",
+                "name": "userId",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "authToken",
+                "name": "authToken",
+                "typeName": "java.lang.String"
+              },
+              {
+                "desc": "siteCode",
+                "name": "siteCode",
+                "typeName": "java.lang.String"
+              }
+            ],
+            "name": "pvg",
+            "typeName": "com.xxx.pangu.client.dto.PvgDto"
+          }
+        ],
+        "returnModel": {
+          "desc": "",
+          "innerField": [
+            {
+              "desc": "success",
+              "name": "success",
+              "typeName": "boolean"
+            },
+            {
+              "desc": "result",
+              "innerField": [
+                {
+                  "desc": "type",
+                  "name": "type",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "name",
+                  "name": "name",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "level",
+                  "name": "level",
+                  "typeName": "java.lang.Long"
+                },
+                {
+                  "desc": "sort",
+                  "name": "sort",
+                  "typeName": "java.lang.Long"
+                },
+                {
+                  "desc": "parentId",
+                  "name": "parentId",
+                  "typeName": "java.lang.Long"
+                },
+                {
+                  "desc": "isView",
+                  "name": "isView",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "children",
+                  "innerField": [
+                    {
+                      "desc": "type",
+                      "name": "type",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "name",
+                      "name": "name",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "level",
+                      "name": "level",
+                      "typeName": "java.lang.Long"
+                    },
+                    {
+                      "desc": "sort",
+                      "name": "sort",
+                      "typeName": "java.lang.Long"
+                    },
+                    {
+                      "desc": "parentId",
+                      "name": "parentId",
+                      "typeName": "java.lang.Long"
+                    },
+                    {
+                      "desc": "isView",
+                      "name": "isView",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "children",
+                      "name": "children",
+                      "typeName": "java.util.List"
+                    },
+                    {
+                      "desc": "firstName",
+                      "name": "firstName",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "firstId",
+                      "name": "firstId",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "firstParentId",
+                      "name": "firstParentId",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "secondName",
+                      "name": "secondName",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "secondId",
+                      "name": "secondId",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "secondParentId",
+                      "name": "secondParentId",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "thirdName",
+                      "name": "thirdName",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "thirdId",
+                      "name": "thirdId",
+                      "typeName": "java.lang.String"
+                    },
+                    {
+                      "desc": "thirdParentId",
+                      "name": "thirdParentId",
+                      "typeName": "java.lang.String"
+                    }
+                  ],
+                  "name": "children",
+                  "typeName": "java.util.List"
+                },
+                {
+                  "desc": "firstName",
+                  "name": "firstName",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "firstId",
+                  "name": "firstId",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "firstParentId",
+                  "name": "firstParentId",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "secondName",
+                  "name": "secondName",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "secondId",
+                  "name": "secondId",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "secondParentId",
+                  "name": "secondParentId",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "thirdName",
+                  "name": "thirdName",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "thirdId",
+                  "name": "thirdId",
+                  "typeName": "java.lang.String"
+                },
+                {
+                  "desc": "thirdParentId",
+                  "name": "thirdParentId",
+                  "typeName": "java.lang.String"
+                }
+              ],
+              "name": "result",
+              "typeName": "com.xxx.pangu.client.dto.ClassifyDto"
+            },
+            {
+              "desc": "errCode",
+              "name": "errCode",
+              "typeName": "java.lang.String"
+            },
+            {
+              "desc": "errMsg",
+              "name": "errMsg",
+              "typeName": "java.lang.String"
+            }
+          ],
+          "typeName": "com.xxx.common.dto.Result"
+        },
+        "title": "createClassify"
+      }
+]
+
+```
