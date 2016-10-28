@@ -6,7 +6,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
@@ -71,5 +70,3 @@ fabric.properties
 .idea/
 .DS_Store
 swamm.iml
-
-.gitignore
