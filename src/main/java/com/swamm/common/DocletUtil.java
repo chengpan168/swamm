@@ -10,6 +10,7 @@ import java.util.Map;
 import com.sun.tools.doclets.internal.toolkit.util.DocletConstants;
 import com.sun.tools.javadoc.FieldDocImpl;
 import com.swamm.doc.DocletTree;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -94,7 +95,7 @@ public class DocletUtil {
         DocletTree.Node node = docletTree.add(methodDoc.flatSignature());
 
         List<FieldModel> fieldModels = new ArrayList<>();
-        for (FieldDoc fieldDoc : getAllField(type.asClassDoc())) {
+        for (FieldDoc fieldDoc : getAllField(type)) {
             if (fieldDoc.isStatic()) {
                 continue;
             }
@@ -299,6 +300,7 @@ public class DocletUtil {
 
             innerParamModels.add(paramModel);
         }
+
         DocletLog.log("参数：" + parameter + " 不是基本类型，解析内部参数：" + JSON.toJSONString(innerParamModels));
 
         return innerParamModels;
@@ -307,7 +309,7 @@ public class DocletUtil {
 
     public static List<FieldDoc> getFilterField(MethodDoc methodDoc, Parameter parameter) {
         DocletLog.log("获取过滤需要的属性参数");
-        List<FieldDoc> fieldDocs = getAllField(parameter.type().asClassDoc());
+        List<FieldDoc> fieldDocs = getAllField(parameter.type());
 
         if (fieldDocs == null || fieldDocs.size() == 0) {
             return Collections.emptyList();
@@ -325,10 +327,15 @@ public class DocletUtil {
             if (parameterComment.startsWith(Tags.PREFIX)) {
                 String[] paramFields = StringUtils.split(parameterComment);
                 String property = StringUtils.substring(paramFields[0], 1);
+                if (StringUtils.isBlank(property)) {
+                    continue;
+                }
+
                 String fieldComment = StringUtils.substring(parameterComment, property.length() + 1);
                 needTag.put(property, fieldComment);
             }
         }
+
         boolean isSpecialField = needTag.size() > 0;
         if (isSpecialField) {
             DocletLog.log("用户指定接口参数：" + needTag);
@@ -368,11 +375,28 @@ public class DocletUtil {
         return resultFieldDocs;
     }
 
-    public static List<FieldDoc> getAllField(ClassDoc classDoc) {
+    public static List<FieldDoc> getAllField(Type type) {
+        if (type == null) {
+            return Collections.emptyList();
+        }
+
+        ClassDoc classDoc = type.asClassDoc();
 
         if (classDoc == null || Object.class.getName().equals(classDoc.qualifiedName())) {
             return Collections.emptyList();
         }
+
+        // 如果参数是集合，获取泛型字段
+        if (ClassUtil.isCollection(type)) {
+            System.out.printf("是集合类型：" + type);
+            List<Type> genericTypes = ClassUtil.getGenericType(type);
+            System.out.printf("是集合类型：" + genericTypes);
+            if (genericTypes.size() > 0) {
+                classDoc = genericTypes.get(0).asClassDoc();
+            }
+        }
+
+
 
         List<FieldDoc> fieldDocs = new ArrayList<>();
 
@@ -403,6 +427,47 @@ public class DocletUtil {
         return paramName;
     }
 
+    public static List<FieldModel> getCustomTagParam(List<ParamTag> paramTags) {
+        List<FieldModel> fieldModels = new ArrayList<>();
+        if (paramTags == null || paramTags.size() == 0) {
+            return fieldModels;
+        }
+
+        for (ParamTag paramTag : paramTags) {
+            String comment = paramTag.parameterComment();
+            if (comment == null || comment.isEmpty()) {
+                continue;
+            }
+
+            if (!comment.startsWith(Tags.PREFIX)) {
+                continue;
+            }
+
+            String[] split = StringUtils.split(comment.trim());
+            if (split == null || split.length < 1) {
+                continue;
+            }
+
+            FieldModel fieldModel = new FieldModel();
+            fieldModel.setName(split[0]);
+            if (split.length > 1) {
+                fieldModel.setDesc(split[1]);
+            }
+
+            fieldModels.add(fieldModel);
+        }
+
+
+        return fieldModels;
+    }
+
+
+    /**
+     * 根据参数名取得所有tag定义
+     * @param methodDoc
+     * @param paramName
+     * @return
+     */
     public static List<ParamTag> getParamTag(MethodDoc methodDoc, String paramName) {
         ParamTag[] tags = methodDoc.paramTags();
         if (tags == null || tags.length == 0) {
