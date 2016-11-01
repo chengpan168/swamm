@@ -15,6 +15,7 @@ import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Type;
 import com.swamm.common.ClassUtil;
 import com.swamm.common.DocletContext;
+import com.swamm.common.DocletLog;
 import com.swamm.common.HttpUtils;
 import com.swamm.doc.ClassModel;
 import com.swamm.doc.FieldModel;
@@ -26,28 +27,49 @@ import com.swamm.handler.Handler;
  */
 public class RapHandler implements Handler {
 
-    private String host = "http://127.0.0.1:8080";
+    private String host = "http://rap.3dker.cn";
+//    private String host = "http://127.0.0.1:8080";
     private String loadUrl = "/workspace/loadWorkspace.do";
     private String saveUrl = "/workspace/checkIn.do";
     private String lockUrl = "/workspace/lock.do";
 
     private String projectId = "10";
-    int moduleId = 38;
 
     @Override
     public void execute(RootDoc rootDoc, List<ClassModel> classModels, Map<String, String> options) {
 
-        String project = HttpUtils.doPost(host + loadUrl, Collections.singletonMap("projectId", projectId));
+        System.out.printf("options : " + options);
+
+        String optProjectId = options.get("projectId");
+        if (optProjectId != null) {
+            projectId = optProjectId;
+        }
+
+        String optHost = options.get("host");
+        if (optHost != null) {
+            host = "http://" + optHost;
+            if (options.get("port") != null) {
+                host += ":" + options.get("port");
+            }
+        }
+
+        String project = HttpUtils.doPost(host + loadUrl, Collections.singletonMap("projectId", this.projectId));
+
+//        System.out.println("取得工程结果");
+//        System.out.println(project);
+
 
         Map<String, Object> jsonObj = JSON.parseObject(project, Map.class);
-        String projectData = jsonObj.get("projectData").toString();
+        String projectData = String.valueOf(jsonObj.get("projectData"));
+        if (project == null) {
+            System.out.println("取得工程结果出错");
+            System.out.println(project);
+        }
 
-        System.out.println(projectData);
 
         Project p = JSON.parseObject(projectData, Project.class);
 
-        System.out.println(p);
-        System.out.println(project);
+//        System.out.println(p);
 
         // 删除原有module
         List<ObjectItem> deleteList = new ArrayList<>();
@@ -84,7 +106,7 @@ public class RapHandler implements Handler {
                 action.setName(methodModel.getTitle());
                 action.setDescription(methodModel.getDesc());
                 action.setRequestType(2);
-                action.setRequestUrl(classModel.getType() + "." + methodModel.getName());
+                action.setRequestUrl("/dubbo/" + classModel.getType() + "." + methodModel.getName());
 
                 action.setRequestParameterList(convertParameter(methodModel.getParamModels()));
 
@@ -105,7 +127,7 @@ public class RapHandler implements Handler {
         moduleList.add(module);
         p.setModuleList(moduleList);
 
-        System.out.println("action list");
+        System.out.println("接口列表：");
         System.out.println(JSON.toJSONString(actionList));
 
         save(p, deleteList);
@@ -127,10 +149,12 @@ public class RapHandler implements Handler {
         }
         JSONObject jsonObject = JSON.parseObject(res);
 
-        System.out.println("lock project :" + res);
+        System.out.println("锁定工程" );
         if (!jsonObject.get("isOk").toString().equals("true")) {
-            System.out.println("lock project success");
+            DocletLog.log("锁定工程失败");
             return;
+        } else {
+            DocletLog.log("锁定工程成功");
         }
 
         Map<String, String> param = new HashMap<>();
@@ -141,11 +165,15 @@ public class RapHandler implements Handler {
 
         param.put("projectData", JSON.toJSONString(p));
 
-        System.out.println("save project");
-        System.out.println(JSON.toJSONString(param));
+        DocletLog.log("保存工程。。。");
+//        System.out.println(JSON.toJSONString(param));
 
         String result = HttpUtils.doPost(host + saveUrl, param);
-        System.out.println(result);
+
+        Map map = JSON.parseObject(res, Map.class);
+        if ("true".equals(String.valueOf(map.get("isOk")))) {
+            DocletLog.log("保存工程成功");
+        }
 
     }
 

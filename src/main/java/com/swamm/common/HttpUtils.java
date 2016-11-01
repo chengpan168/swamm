@@ -14,7 +14,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,9 +25,8 @@ public class HttpUtils {
 
     public static final String USER_AGENT_DEFAULT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.58 Safari/537.36s";
     public static final String CHARSET_UTF8       = "UTF-8";
-    public static final String COOKIE       = "JSESSIONID=DA6A0F4DEABDE86C7E6570CBF56F8F01";
-
-
+    public static String       COOKIE             = "account=chengpanwang;password=123456";
+    public static String       SESSION_ID         = "";
 
     public static String doGet(String link) throws IOException {
         return doGet(link, null);
@@ -55,6 +56,34 @@ public class HttpUtils {
             for (int i = 0; (i = in.read(buf)) > 0;) {
                 out.write(buf, 0, i);
             }
+
+            //获取cookie
+            if (SESSION_ID == null || SESSION_ID.isEmpty()) {
+
+                Map<String, List<String>> map = conn.getHeaderFields();
+                Set<String> set = map.keySet();
+                if (set != null && set.size() > 0) {
+
+                    for (Iterator iterator = set.iterator(); iterator.hasNext();) {
+                        String key = (String) iterator.next();
+                        if (key == null || key.isEmpty()) {
+                            continue;
+                        }
+                        if (key.equals("Set-Cookie")) {
+                            System.out.println("key=" + key + ",开始获取cookie");
+                            List<String> list = map.get(key);
+                            StringBuilder builder = new StringBuilder();
+                            for (String str : list) {
+                                builder.append(str).toString();
+                            }
+                            SESSION_ID = builder.toString();
+                        }
+                    }
+
+                    COOKIE += ";" + SESSION_ID;
+                }
+            }
+
             out.flush();
             String s = new String(out.toByteArray(), charset);
             return s;
@@ -241,12 +270,41 @@ public class HttpUtils {
             urlConn.setReadTimeout(30000);// （单位：毫秒）jdk 1.5换成这个,读操作超时
             urlConn.setDoOutput(true);
 
-
-
             byte[] b = httpBody.getBytes();
             urlConn.getOutputStream().write(b, 0, b.length);
+
             urlConn.getOutputStream().flush();
             urlConn.getOutputStream().close();
+
+
+            //获取cookie
+            if (SESSION_ID == null || SESSION_ID.isEmpty()) {
+
+                Map<String, List<String>> map = urlConn.getHeaderFields();
+                Set<String> set = map.keySet();
+                if (set != null && set.size() > 0) {
+
+                    for (Iterator iterator = set.iterator(); iterator.hasNext();) {
+                        String key = (String) iterator.next();
+                        if (key == null || key.isEmpty()) {
+                            continue;
+                        }
+                        if (key.equals("Set-Cookie")) {
+                            System.out.println("key=" + key + ",开始获取cookie");
+                            List<String> list = map.get(key);
+                            StringBuilder builder = new StringBuilder();
+                            for (String str : list) {
+                                builder.append(str).toString();
+                            }
+                            SESSION_ID = builder.toString();
+                        }
+                    }
+
+                    COOKIE += ";" + SESSION_ID;
+                }
+            }
+
+
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
