@@ -8,7 +8,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
 使用方式
   
 ```
-    swamm.sh class=UserApiService(接口名，可以带号分隔) src/main/java(源码位置) com.xxx.xxx.client(包名)
+    swamm.sh class=CommentApiService:projectId=10  src/main/java com.***.***.client
 ```
 
 如下接品定义中
