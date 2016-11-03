@@ -161,7 +161,7 @@ public class DocletUtil {
 
         List<FieldModel> fieldModels = new ArrayList<>();
 
-        FieldDoc[] fields = null;
+        List<FieldDoc> fields = null;
         Type parentType = type;
 
         // 如果是集合类型
@@ -186,7 +186,7 @@ public class DocletUtil {
                     }
 
                     DocletLog.log("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
-                    fields = parentType.asClassDoc().fields();
+                    fields = getAllField(parentType);
 
 
                 }
@@ -199,7 +199,7 @@ public class DocletUtil {
                     }
 
                     DocletLog.log("集合属性：" + name + " ，是复杂类型：" + genericType);
-                    fields = genericType.asClassDoc().fields();
+                    fields = getAllField(genericType);
                     parentType = genericType;
                 }
 
@@ -211,10 +211,10 @@ public class DocletUtil {
 
         else {
             DocletLog.log("获取属性：" + name + ", 子属性， 属性类型：" + type);
-            fields = type.asClassDoc().fields();
+            fields = getAllField(type);
         }
 
-        if (fields != null && fields.length > 0) {
+        if (fields != null && fields.size() > 0) {
             for (FieldDoc innerFieldDoc : fields) {
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
@@ -376,6 +376,7 @@ public class DocletUtil {
     }
 
     public static List<FieldDoc> getAllField(Type type) {
+        DocletLog.log("获取所有属性：" + type);
         if (type == null) {
             return Collections.emptyList();
         }
@@ -388,9 +389,9 @@ public class DocletUtil {
 
         // 如果参数是集合，获取泛型字段
         if (ClassUtil.isCollection(type)) {
-            System.out.printf("是集合类型：" + type);
+            DocletLog.log("获取所有属性: " + type +  ",是集合类型");
             List<Type> genericTypes = ClassUtil.getGenericType(type);
-            System.out.printf("是集合类型：" + genericTypes);
+            DocletLog.log("获取所有属性: " + type + ", 泛型：" + genericTypes);
             if (genericTypes.size() > 0) {
                 classDoc = genericTypes.get(0).asClassDoc();
             }
