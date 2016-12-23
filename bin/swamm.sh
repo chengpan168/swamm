@@ -24,9 +24,11 @@ done
 
 #echo "doclet path：$DOCLET_PATH"
 
-echo "javadoc -tag $1 -classpath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH -subpackages $3"
+CLASS_PATH=`mvn dependency:build-classpath |grep jar`
 
-javadoc -tag $1 -classpath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH  -private -subpackages $3
+echo "javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH -subpackages $3"
+
+javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH  -private -subpackages $3
 
 #javadoc -tag class=ClassifyApiService  -cp src/main/java
 # -doclet com.swamm.doc.Doclet -docletpath ../swamm/target/swamm-1.0.jar:../swamm/lib/commons-lang3-3.4.jar:../swamm/lib/fastjson-1.2.12.jar:

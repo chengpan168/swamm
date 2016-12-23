@@ -17,7 +17,9 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
      * 新增用户接口，这里是接口的描述
      * @title 新增用户
      * @param user
-     * @param user name 用户名称，这里优先级最高，如果填写了用户的子属性，将不再解析User类中的属性
+     * @param user @name 用户名称，这里优先级最高，如果填写了用户的子属性，将不再解析User类中的属性
+     * @param user @name 
+     * @param user @addressDto @city 支持内部属性 
      */
     void insert(User user);
 ```
@@ -108,7 +110,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
         "paramModels": [
           {
             "desc": "classifyDto",
-            "innerField": [
+            "innerFields": [
               {
                 "desc": "type",
                 "name": "type",
@@ -225,7 +227,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
           },
           {
             "desc": "pvg",
-            "innerField": [
+            "innerFields": [
               {
                 "desc": "language",
                 "name": "language",
@@ -253,7 +255,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
         ],
         "returnModel": {
           "desc": "",
-          "innerField": [
+          "innerFields": [
             {
               "desc": "success",
               "name": "success",
@@ -261,7 +263,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
             },
             {
               "desc": "result",
-              "innerField": [
+              "innerFields": [
                 {
                   "desc": "type",
                   "name": "type",
@@ -294,7 +296,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
                 },
                 {
                   "desc": "children",
-                  "innerField": [
+                  "innerFields": [
                     {
                       "desc": "type",
                       "name": "type",

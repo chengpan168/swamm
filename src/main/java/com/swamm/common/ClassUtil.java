@@ -5,6 +5,7 @@ import com.sun.javadoc.ParameterizedType;
 import com.sun.javadoc.Type;
 import com.swamm.doc.GenericType;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +36,7 @@ public class ClassUtil {
         primitiveWrapperMap.put(Float.class.getName(), Float.class);
         primitiveWrapperMap.put(Void.class.getName(), Void.TYPE);
         primitiveWrapperMap.put(String.class.getName(), String.class);
+        primitiveWrapperMap.put(BigDecimal.class.getName(), BigDecimal.class);
 
         primitiveWrapperMap.put(Date.class.getName(), Date.class);
         primitiveWrapperMap.put(Timestamp.class.getName(), Timestamp.class);
@@ -68,6 +70,7 @@ public class ClassUtil {
         simpleTypeMap.put(Float.class.getSimpleName(), Float.class);
         simpleTypeMap.put(Void.class.getSimpleName(), Void.TYPE);
         simpleTypeMap.put(String.class.getSimpleName(), String.class);
+        simpleTypeMap.put(BigDecimal.class.getSimpleName(), BigDecimal.class);
 
         simpleTypeMap.put(Date.class.getSimpleName(), Date.class);
         simpleTypeMap.put(Timestamp.class.getSimpleName(), Timestamp.class);

@@ -25,12 +25,13 @@ import org.apache.commons.lang3.time.StopWatch;
 public class Doclet {
 
     public static boolean start(RootDoc root) {
-        DocletContext.init(root);
+
 
         DocletLog.log("开始解析源代码。。。");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         String tagName = readOptions(root.options());
+        DocletContext.init(root, tagName);
         writeContents(root, tagName);
 
         DocletLog.log("解析源代码完成， 耗时：" + stopWatch.getTime() + " ms");
@@ -41,16 +42,6 @@ public class Doclet {
 
         ClassDoc[] classes = rootDoc.classes();
 
-        Map<String, String> optionMap = new HashMap<>();
-        if (StringUtils.isNotBlank(tagName)) {
-            for (String pair : StringUtils.split(tagName, Tags.SEPARATOR)) {
-                String[] kv = StringUtils.split(pair, Tags.KV_SEPARATOR);
-                if (kv != null && kv.length == 2) {
-                    optionMap.put(kv[0], kv[1]);
-                }
-            }
-        }
-
         List<ClassModel> classModels = new ArrayList<ClassModel>();
 
         for (ClassDoc classDoc : classes) {
@@ -60,8 +51,8 @@ public class Doclet {
                 continue;
             }
 
-            if (StringUtils.isNotBlank(optionMap.get(Tags.CLASS))) {
-                if (!ArrayUtils.contains(StringUtils.split(optionMap.get(Tags.CLASS), ","), classDoc.simpleTypeName())) {
+            if (StringUtils.isNotBlank(DocletContext.getOption(Tags.CLASS))) {
+                if (!ArrayUtils.contains(StringUtils.split(DocletContext.getOption(Tags.CLASS), ","), classDoc.simpleTypeName())) {
                     continue;
                 }
             }
@@ -84,7 +75,7 @@ public class Doclet {
         DocletLog.log("解析结果：");
         DocletLog.log(JSON.toJSONString(classModels));
 
-        new RapHandler().execute(rootDoc, classModels, optionMap);
+//        new RapHandler().execute(rootDoc, classModels, optionMap);
     }
 
 

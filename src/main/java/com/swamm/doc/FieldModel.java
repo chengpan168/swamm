@@ -1,8 +1,9 @@
 package com.swamm.doc;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.javadoc.FieldDoc;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.alibaba.fastjson.annotation.JSONField;
@@ -20,7 +21,7 @@ public class FieldModel {
 
     private String           typeName;
 
-    private List<FieldModel> innerField;
+    private List<FieldModel> innerFields;
 
     public FieldModel() {
     }
@@ -29,11 +30,10 @@ public class FieldModel {
         this.type = type;
     }
 
-
-
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return "FieldModel{" + "desc='" + desc + '\'' + ", name='" + name + '\'' + ", type=" + type + ", typeName='" + typeName + '\''
+               + ", innerFields=" + '}';
     }
 
     public String getDesc() {
@@ -52,12 +52,12 @@ public class FieldModel {
         this.name = name;
     }
 
-    public List<FieldModel> getInnerField() {
-        return innerField;
+    public List<FieldModel> getInnerFields() {
+        return innerFields;
     }
 
-    public void setInnerField(List<FieldModel> innerField) {
-        this.innerField = innerField;
+    public void setInnerFields(List<FieldModel> innerFields) {
+        this.innerFields = innerFields;
     }
 
     public Type getType() {
@@ -77,5 +77,57 @@ public class FieldModel {
 
     public void setTypeName(String typeName) {
         this.typeName = typeName;
+    }
+
+    /**
+     * 有重复的直接返回
+     * @param innerFieldModel
+     */
+    public void addInnerField(FieldModel innerFieldModel) {
+        if (innerFieldModel == null) {
+            return;
+        }
+
+        if (innerFields == null) {
+            innerFields = new ArrayList<>();
+        }
+
+        for (FieldModel fieldModel : innerFields) {
+            if (fieldModel.getName().equals(innerFieldModel.getName())) {
+                return;
+            }
+        }
+
+        innerFields.add(innerFieldModel);
+
+    }
+
+    public FieldModel getInnerField(String name, boolean create) {
+        if (StringUtils.isBlank(name)) {
+            return null;
+        }
+
+
+        if (innerFields == null) {
+            innerFields = new ArrayList<>();
+        }
+
+        for (FieldModel fieldModel : innerFields) {
+            if (fieldModel.getName().equals(name)) {
+                return fieldModel;
+            }
+        }
+
+        FieldModel innerField = null;
+        if (create) {
+            innerField = new FieldModel();
+            innerField.setName(name);
+
+            innerFields.add(innerField);
+
+        }
+
+        return innerField;
+
     }
 }

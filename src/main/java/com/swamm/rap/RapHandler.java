@@ -110,7 +110,7 @@ public class RapHandler implements Handler {
 
                 action.setRequestParameterList(convertParameter(methodModel.getParamModels()));
 
-                action.setResponseParameterList(convertParameter(methodModel.getReturnModel().getInnerField()));
+                action.setResponseParameterList(convertParameter(methodModel.getReturnModel().getInnerFields()));
 
                 actionList.add(action);
             }
@@ -198,7 +198,7 @@ public class RapHandler implements Handler {
             parameter.setDataType(getDataType(fieldModel));
             parameter.setRemark(fieldModel.getDesc());
 
-            parameter.setParameterList(convertParameter(fieldModel.getInnerField()));
+            parameter.setParameterList(convertParameter(fieldModel.getInnerFields()));
 
             requestParameterList.add(parameter);
 

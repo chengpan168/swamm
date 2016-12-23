@@ -1,35 +1,19 @@
 package com.swamm.common;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import com.sun.tools.doclets.internal.toolkit.util.DocletConstants;
-import com.sun.tools.javadoc.FieldDocImpl;
-import com.swamm.doc.DocletTree;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.FieldDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.ParamTag;
-import com.sun.javadoc.Parameter;
-import com.sun.javadoc.Tag;
-import com.sun.javadoc.Type;
+import com.sun.javadoc.*;
 import com.swamm.doc.FieldModel;
 import com.swamm.doc.MethodModel;
+import com.swamm.doc.TreeNode;
 
 /**
  * Created by chengpanwang on 2016/10/20.
  */
 public class DocletUtil {
-
-    public static DocletTree docletTree = new DocletTree();
 
     public static List<MethodModel> getMethodModels(ClassDoc classDoc) {
 
@@ -92,7 +76,7 @@ public class DocletUtil {
         }
         returnModel.setType(type);
 
-        DocletTree.Node node = docletTree.add(methodDoc.flatSignature());
+        TreeNode node = new TreeNode(methodDoc.returnType().typeName());
 
         List<FieldModel> fieldModels = new ArrayList<>();
         for (FieldDoc fieldDoc : getAllField(type)) {
@@ -102,12 +86,12 @@ public class DocletUtil {
             fieldModels.add(getFieldModel(type, fieldDoc, genericTypeMap, node));
         }
 
-        returnModel.setInnerField(fieldModels);
+        returnModel.setInnerFields(fieldModels);
 
         return returnModel;
     }
 
-    public static FieldModel getFieldModel(Type parentType, FieldDoc fieldDoc, Map<String, Type> genericTypeMap, DocletTree.Node node) {
+    public static FieldModel getFieldModel(Type parentType, FieldDoc fieldDoc, Map<String, Type> genericTypeMap, TreeNode node) {
 
         String parentTypeName = parentType.qualifiedTypeName();
 
@@ -131,19 +115,21 @@ public class DocletUtil {
     }
 
 
-    public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap, DocletTree.Node node) {
+    public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap, TreeNode node) {
+        DocletLog.log("当前路径：" + node.path());
+
         String parentTypeName = parentType.qualifiedTypeName();
         if (node.deep() > DocletContext.FIELD_DEEP) {
             DocletLog.log("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 递归深度超过：" + DocletContext.FIELD_DEEP);
         } else {
             if (!isGetInnerField(fieldModel.getType())) {
-                fieldModel.setInnerField(getInnerField(fieldModel, genericTypeMap, node));
+                fieldModel.setInnerFields(getInnerField(fieldModel, genericTypeMap, node));
             }
         }
         return fieldModel;
     }
 
-    public static List<FieldModel> getInnerField(FieldModel fieldModel, Map<String, Type> genericTypeMap, DocletTree.Node node) {
+    public static List<FieldModel> getInnerField(FieldModel fieldModel, Map<String, Type> genericTypeMap, TreeNode node) {
         Type type = fieldModel.getType();
         String name = fieldModel.getName();
 
@@ -216,10 +202,29 @@ public class DocletUtil {
 
         if (fields != null && fields.size() > 0) {
             for (FieldDoc innerFieldDoc : fields) {
+//                DocletLog.debug("----------属性名称：" + innerFieldDoc.name());
+//                DocletLog.debug("node的属性：" + JSON.toJSONString(node.getName()));
+
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
                 }
-                fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
+                List<FieldModel> customFieldModels = null;
+                if(node.getCurrentFieldModel() != null) {
+                    customFieldModels = node.getCurrentFieldModel().getInnerFields();
+                }
+
+
+
+                if (customFieldModels == null || customFieldModels.size() == 0) {
+                    fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
+                } else {
+                    for (FieldModel customFieldMode : customFieldModels) {
+                        if (innerFieldDoc.name().equals(customFieldMode.getName())) {
+                            DocletLog.debug("从node中取得指定的属性,用于过滤不需要的属性：" + innerFieldDoc.name() + " , " + JSON.toJSONString(customFieldModels));
+                            fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
+                        }
+                    }
+                }
             }
         }
 
@@ -257,6 +262,8 @@ public class DocletUtil {
 
         DocletLog.log("开始解析方法参数：" + methodDoc);
 
+
+
         Parameter[] parameters = methodDoc.parameters();
 
         // 参数
@@ -264,21 +271,112 @@ public class DocletUtil {
             return Collections.emptyList();
         }
 
+        List<FieldModel> customFields = getCustomField(methodDoc);
+
         List<FieldModel> paramModels = new ArrayList<FieldModel>();
         for (Parameter param : parameters) {
+            Type type = param.type();
+
             FieldModel paramModel = new FieldModel();
             paramModel.setName(param.name());
             paramModel.setDesc(getParamDesc(methodDoc, param));
-            paramModel.setType(param.type());
+            paramModel.setType(type);
 
-            // 如果参数是类，取出内部参数
-            paramModel.setInnerField(getInnerParam(methodDoc, param));
+            TreeNode node = new TreeNode(param.name());
 
+            for (FieldModel customField : customFields) {
+                if (customField.getName().equals(param.name())) {
+                    node.setFieldModel(customField);
+                }
+            }
+
+            paramModel = getFieldModel(param.type(), paramModel, Collections.emptyMap(), node);
+
+
+            /*List<FieldModel> fieldModels = new ArrayList<>();
+            for (FieldDoc fieldDoc : getAllField(type)) {
+                if (fieldDoc.isStatic()) {
+                    continue;
+                }
+                fieldModels.add(getFieldModel(param.type(), fieldDoc, Collections.emptyMap(), node));
+            }
+            paramModel.setInnerFields(fieldModels);
+*/
             paramModels.add(paramModel);
         }
 
         return paramModels;
+
     }
+
+    /**
+     * 解析指定参数   例如
+     * @param methodDoc @name @str
+     * @param methodDoc
+     * @return
+     */
+    public static List<FieldModel> getCustomField(MethodDoc methodDoc) {
+        List<FieldModel> fieldModels = new ArrayList<FieldModel>();
+
+        ParamTag[] paramTags = methodDoc.paramTags();
+        if (paramTags == null || paramTags.length == 0) {
+            return fieldModels;
+        }
+
+
+
+        Map<String, FieldModel> fieldMap = new HashMap<>();
+
+        for (ParamTag paramTag : paramTags) {
+            String argName = paramTag.parameterName();
+
+            FieldModel fieldModel = fieldMap.get(argName);
+            if (fieldModel == null) {
+                fieldModel = new FieldModel();
+                fieldModel.setName(argName);
+                fieldMap.put(argName, fieldModel);
+            }
+        }
+
+
+        // 把在方法指定的参数 整理成fieldModel 的父子关系
+        for (ParamTag paramTag : paramTags) {
+            DocletLog.debug("用户指定方法参数属性：" + paramTag.parameterName() + " ," + paramTag.parameterComment());
+            String argName = paramTag.parameterName();
+            String comment = " " + paramTag.parameterComment();
+            String[] childrenFieldNames = comment.split(" ");
+            if (childrenFieldNames == null || childrenFieldNames.length == 0) {
+                continue;
+            }
+
+            FieldModel fieldModel = fieldMap.get(argName);
+
+            for (String childFieldName : childrenFieldNames) {
+                if (StringUtils.isBlank(childFieldName) || !childFieldName.startsWith(Tags.PREFIX)) {
+                    continue;
+                }
+
+                childFieldName = childFieldName.substring(Tags.PREFIX.length());
+
+                FieldModel innerField = fieldModel.getInnerField(childFieldName, true);
+                fieldModel.addInnerField(innerField);
+
+                fieldModel = innerField;
+            }
+        }
+
+        fieldModels.addAll(fieldMap.values());
+
+        if (fieldModels.size() > 0) {
+            DocletLog.info("用户指定方法参数属性集合：" + JSON.toJSON(fieldModels));
+
+        }
+
+        return fieldModels;
+
+    }
+
+
 
     public static List<FieldModel> getInnerParam(MethodDoc methodDoc, Parameter parameter) {
         if (ClassUtil.isPrimitiveWrapper(parameter.type())) {
