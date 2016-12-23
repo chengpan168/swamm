@@ -75,7 +75,7 @@ public class Doclet {
         DocletLog.log("解析结果：");
         DocletLog.log(JSON.toJSONString(classModels));
 
-//        new RapHandler().execute(rootDoc, classModels, optionMap);
+        new RapHandler().execute(rootDoc, classModels, optionMap);
     }
 
 
