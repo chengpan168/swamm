@@ -11,5 +11,5 @@ import java.util.Map;
  */
 public interface Handler {
 
-    void execute(RootDoc rootDoc, List<ClassModel> classModels, Map<String, String> options);
+    void execute(RootDoc rootDoc, List<ClassModel> classModels);
 }

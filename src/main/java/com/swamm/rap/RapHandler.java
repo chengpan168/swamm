@@ -1,12 +1,7 @@
 package com.swamm.rap;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -36,20 +31,18 @@ public class RapHandler implements Handler {
     private String projectId = "10";
 
     @Override
-    public void execute(RootDoc rootDoc, List<ClassModel> classModels, Map<String, String> options) {
+    public void execute(RootDoc rootDoc, List<ClassModel> classModels) {
 
-        System.out.printf("options : " + options);
-
-        String optProjectId = options.get("projectId");
+        String optProjectId = DocletContext.getOption("projectId");
         if (optProjectId != null) {
             projectId = optProjectId;
         }
 
-        String optHost = options.get("host");
+        String optHost = DocletContext.getOption("host");
         if (optHost != null) {
             host = "http://" + optHost;
-            if (options.get("port") != null) {
-                host += ":" + options.get("port");
+            if (DocletContext.getOption("port") != null) {
+                host += ":" + DocletContext.getOption("port");
             }
         }
 
