@@ -24,7 +24,7 @@ done
 
 #echo "doclet path：$DOCLET_PATH"
 
-CLASS_PATH=`mvn dependency:build-classpath |grep jar`
+CLASS_PATH=`mvn dependency:build-classpath |grep jar |grep "/"`
 
 echo "javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH -subpackages $3"
 
