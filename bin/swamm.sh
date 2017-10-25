@@ -26,7 +26,7 @@ done
 
 CLASS_PATH=`mvn dependency:build-classpath |grep jar |grep "/"`
 
-echo "javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH -subpackages $3"
+#echo "javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH -subpackages $3"
 
 javadoc -tag $1 -classpath $CLASS_PATH -sourcepath $2 -doclet com.swamm.doc.Doclet -docletpath $DOCLET_PATH  -private -subpackages $3
 

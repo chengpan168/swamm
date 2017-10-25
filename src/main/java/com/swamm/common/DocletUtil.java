@@ -29,6 +29,7 @@ public class DocletUtil {
             MethodModel methodModel = new MethodModel();
             methodModel.setDesc(methodDoc.commentText());
             methodModel.setName(methodDoc.name());
+            methodModel.setUrl(getUrl(methodDoc));
 
             Tag[] tags = methodDoc.tags(Tags.TITLE);
             if (tags != null && tags.length > 0) {
@@ -52,6 +53,25 @@ public class DocletUtil {
             DocletLog.log("解析方法完成：" + JSON.toJSONString(methodModel));
         }
         return methodModels;
+    }
+
+    private static String getUrl(MethodDoc methodDoc) {
+        if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
+            return "/" + methodDoc.qualifiedName();
+        } else {
+            for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
+                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
+                    for (AnnotationDesc.ElementValuePair elementValuePair : annotationDesc.elementValues()) {
+                        if (elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.value")
+                         || elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.path")) {
+                            DocletLog.log("request mapping:" + elementValuePair.value());
+                            return elementValuePair.value().toString();
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public static FieldModel getReturnModel(MethodDoc methodDoc) {
@@ -476,6 +496,9 @@ public class DocletUtil {
     public static List<FieldDoc> getAllField(Type type) {
         DocletLog.log("获取所有属性：" + type);
         if (type == null) {
+            return Collections.emptyList();
+        }
+        if (ClassUtil.isPrimitiveOrWrapper(type)) {
             return Collections.emptyList();
         }
 

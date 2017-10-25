@@ -1,23 +1,20 @@
 package com.swamm.doc;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+
+import com.swamm.xiaoyaoji.XiaoYaoJiHandler;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 
 import com.alibaba.fastjson.JSON;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.DocErrorReporter;
-import com.sun.javadoc.LanguageVersion;
-import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.*;
 import com.swamm.common.DocletContext;
 import com.swamm.common.DocletLog;
 import com.swamm.common.DocletUtil;
 import com.swamm.common.Tags;
-import com.swamm.rap.RapHandler;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 
 /**
  * Created by chengpanwang on 2016/10/19.
@@ -25,7 +22,6 @@ import org.apache.commons.lang3.time.StopWatch;
 public class Doclet {
 
     public static boolean start(RootDoc root) {
-
 
         DocletLog.log("开始解析源代码。。。");
         StopWatch stopWatch = new StopWatch();
@@ -46,10 +42,31 @@ public class Doclet {
 
         for (ClassDoc classDoc : classes) {
 
-            // 只解析接口
-            if (!classDoc.isInterface()) {
-                continue;
+
+            // dubbo 协议
+            if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
+
+                // 只解析接口
+                if (!classDoc.isInterface()) {
+                    continue;
+                }
+
+            } else {
+                boolean isController = false;
+                for( AnnotationDesc annotationDesc : classDoc.annotations()) {
+                    List<String> controllers = Arrays.asList("org.springframework.web.bind.annotation.RestController", "org.springframework.web.bind.annotation.Controller");
+                    String annotationType = annotationDesc.annotationType().qualifiedTypeName();
+                    if (controllers.contains(annotationType)) {
+                        isController = true;
+                        break;
+                    }
+                }
+                if (!isController) {
+                    continue;
+                }
             }
+
+            // http spring mvc 协议
 
             if (StringUtils.isNotBlank(DocletContext.getOption(Tags.CLASS))) {
                 if (!ArrayUtils.contains(StringUtils.split(DocletContext.getOption(Tags.CLASS), ","), classDoc.simpleTypeName())) {
@@ -64,7 +81,7 @@ public class Doclet {
             classModel.setDesc(classDoc.commentText());
             classModel.setName(classDoc.name());
             classModel.setType(classDoc.qualifiedTypeName());
-
+            classModel.setUrl(getUrl(classDoc));
             classModels.add(classModel);
 
             classModel.setMethodModels(DocletUtil.getMethodModels(classDoc));
@@ -75,9 +92,28 @@ public class Doclet {
         DocletLog.log("解析结果：");
         DocletLog.log(JSON.toJSONString(classModels));
 
-        new RapHandler().execute(rootDoc, classModels);
+        new XiaoYaoJiHandler().execute(rootDoc, classModels);
     }
 
+    private static String getUrl(ClassDoc classDoc) {
+        if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
+            return "/" + classDoc.qualifiedTypeName();
+        } else {
+            for (AnnotationDesc annotationDesc : classDoc.annotations()) {
+                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
+                    for (AnnotationDesc.ElementValuePair elementValuePair : annotationDesc.elementValues()) {
+
+
+                        if (elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.value")) {
+                            DocletLog.log("request mapping:" + elementValuePair.value());
+                            return elementValuePair.value().toString();
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     private static String readOptions(String[][] options) {
         String tagName = null;

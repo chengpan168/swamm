@@ -32,8 +32,7 @@ public class FieldModel {
 
     @Override
     public String toString() {
-        return "FieldModel{" + "desc='" + desc + '\'' + ", name='" + name + '\'' + ", type=" + type + ", typeName='" + typeName + '\''
-               + ", innerFields=" + '}';
+        return ToStringBuilder.reflectionToString(this);
     }
 
     public String getDesc() {

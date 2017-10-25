@@ -10,6 +10,7 @@ public class MethodModel {
     private String           title;
     private String           desc;
     private String           name;
+    private String           url;
     private List<FieldModel> paramModels;
     private FieldModel       returnModel;
 
@@ -17,6 +18,14 @@ public class MethodModel {
     public String toString() {
         return "MethodModel{" + "title='" + title + '\'' + ", desc='" + desc + '\'' + ", name='" + name + '\'' + ", paramModels=" + paramModels
                + ", returnModel=" + returnModel + '}';
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public String getTitle() {

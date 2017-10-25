@@ -19,6 +19,7 @@ public class DocletContext {
     private static boolean             init                 = false;
     public static LogLevel             LOG_LEVEL            = LogLevel.DEBUG;
     private static Map<String, String> optionMap            = new HashMap<>();
+    public static String               PROTOCOL             = "controller";
 
     public static void init(RootDoc rootDoc) {
         ROOT_DOC = rootDoc;
@@ -40,6 +41,7 @@ public class DocletContext {
         }
 
         LOG_LEVEL = LogLevel.fromCode(optionMap.get("logLevel"));
+        PROTOCOL = optionMap.get("protocol");
 
     }
 

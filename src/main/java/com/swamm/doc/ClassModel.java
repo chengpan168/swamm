@@ -1,5 +1,7 @@
 package com.swamm.doc;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.util.List;
 
 /**
@@ -10,8 +12,17 @@ public class ClassModel {
     private String type;
     private String name;
     private String desc;
+    private String url;
 
     private List<MethodModel> methodModels;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public List<MethodModel> getMethodModels() {
         return methodModels;
@@ -47,7 +58,6 @@ public class ClassModel {
 
     @Override
     public String toString() {
-        return "ClassModel{" + "type='" + type + '\'' + ", name='" + name + '\'' + ", desc='" + desc + '\''
-               + ", methodModels=" + methodModels + '}';
+        return ToStringBuilder.reflectionToString(this);
     }
 }

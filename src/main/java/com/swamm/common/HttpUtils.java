@@ -32,11 +32,11 @@ public class HttpUtils {
         return doGet(link, null);
     }
 
-    public static String doGet(String link, Map<String, String> headers) throws IOException {
+    public static String doGet(String link, Map<String, String> headers) {
         return doGet(link, CHARSET_UTF8, headers);
     }
 
-    public static String doGet(String link, String charset, Map<String, String> headers) throws IOException {
+    public static String doGet(String link, String charset, Map<String, String> headers) {
         try {
             URL url = new URL(link);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -88,8 +88,9 @@ public class HttpUtils {
             String s = new String(out.toByteArray(), charset);
             return s;
         } catch (IOException e) {
-            throw e;
+            e.printStackTrace();
         }
+        return "";
     }
 
     public static String doPost(String reqUrl, String jsonBody) {

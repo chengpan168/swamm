@@ -8,6 +8,7 @@ swamm 是根据是使javadoc 中的doclet api 获取源码的方法入参，返�
 使用方式
   
 ```
+    swamm.sh class=OrderApiService:projectId=12:logLevel=info  src/main/java com.shining3d.athene.client
     swamm.sh class=CommentApiService:projectId=10  src/main/java com.***.***.client
 ```
 
