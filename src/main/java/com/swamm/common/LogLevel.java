@@ -1,6 +1,5 @@
 package com.swamm.common;
 
-import com.sun.crypto.provider.DESKeyGenerator;
 import org.apache.commons.lang3.StringUtils;
 
 /**

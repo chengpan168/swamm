@@ -1,4 +1,4 @@
-package com.swamm.xiaoyaoji;
+package com.swamm.plat.xiaoyaoji;
 
 import java.util.List;
 

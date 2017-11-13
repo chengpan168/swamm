@@ -1,12 +1,16 @@
-package com.swamm.common;
+package com.swamm.doc;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.RootDoc;
+import com.swamm.common.LogLevel;
 
 /**
  * Created by chengpanwang on 2016/10/25.
@@ -20,6 +24,7 @@ public class DocletContext {
     public static LogLevel             LOG_LEVEL            = LogLevel.DEBUG;
     private static Map<String, String> optionMap            = new HashMap<>();
     public static String               PROTOCOL             = "controller";
+    public static List<String>         INCLUDE_CLASS        = Lists.newArrayList();
 
     public static void init(RootDoc rootDoc) {
         ROOT_DOC = rootDoc;
@@ -43,6 +48,10 @@ public class DocletContext {
         LOG_LEVEL = LogLevel.fromCode(optionMap.get("logLevel"));
         PROTOCOL = optionMap.get("protocol");
 
+        String includeClass = optionMap.get(Tags.CLASS);
+        if (StringUtils.isNotBlank(includeClass)) {
+            INCLUDE_CLASS = Arrays.asList(StringUtils.split(includeClass, ","));
+        }
     }
 
     public static RootDoc getRootDoc() {

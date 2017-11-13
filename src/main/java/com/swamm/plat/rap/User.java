@@ -1,4 +1,4 @@
-package com.swamm.rap;
+package com.swamm.plat.rap;
 
 /**
  * Created by chengpanwang on 2016/10/24.

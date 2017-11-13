@@ -1,4 +1,4 @@
-package com.swamm.rap;
+package com.swamm.plat.rap;
 
 public class ObjectItem implements java.io.Serializable {
 

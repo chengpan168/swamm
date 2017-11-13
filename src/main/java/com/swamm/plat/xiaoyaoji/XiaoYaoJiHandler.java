@@ -1,4 +1,4 @@
-package com.swamm.xiaoyaoji;
+package com.swamm.plat.xiaoyaoji;
 
 import java.util.*;
 
@@ -12,12 +12,12 @@ import com.google.common.collect.Maps;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Type;
-import com.swamm.common.ClassUtil;
-import com.swamm.common.DocletContext;
+import com.swamm.doc.ClassTypeHelper;
+import com.swamm.doc.DocletContext;
 import com.swamm.common.HttpClientUtils;
-import com.swamm.doc.ClassModel;
-import com.swamm.doc.FieldModel;
-import com.swamm.doc.MethodModel;
+import com.swamm.model.ClassModel;
+import com.swamm.model.FieldModel;
+import com.swamm.model.MethodModel;
 import com.swamm.handler.Handler;
 
 /**
@@ -27,7 +27,7 @@ public class XiaoYaoJiHandler implements Handler {
 
     String                      host      = "http://doc.3dker.cn";
     String                      token;
-    String                      projectId = "2AS9dEdbsM";
+    String                      projectId = "1hW7GG48X8";
     String                      moduleId  = "";
     String                      folderId  = "";
     private static final Logger logger    = LoggerFactory.getLogger(XiaoYaoJiHandler.class);
@@ -137,7 +137,7 @@ public class XiaoYaoJiHandler implements Handler {
                 Map<String, String> param = Maps.newHashMap();
                 param.put("name", methodModel.getTitle());
                 param.put("description", methodModel.getDesc());
-                param.put("url", classModel.getUrl() + methodModel.getUrl());
+                param.put("url", classModel.getUrl().concat(methodModel.getUrl()));
 
                 param.put("requestArgs", JSON.toJSONString(convertParameter(methodModel.getParamModels())));
                 param.put("responseArgs", JSON.toJSONString(convertParameter(methodModel.getReturnModel())));
@@ -183,7 +183,7 @@ public class XiaoYaoJiHandler implements Handler {
         ClassDoc classDoc = fieldType.asClassDoc();
         if (classDoc != null) {
             if (classDoc.subclassOf(DocletContext.getRootDoc().classNamed("java.util.Collection"))) {
-                List<Type> genericType = ClassUtil.getGenericType(fieldType);
+                List<Type> genericType = ClassTypeHelper.getGenericType(fieldType);
                 if (genericType.isEmpty()) {
                     return "array";
                 }
@@ -196,11 +196,11 @@ public class XiaoYaoJiHandler implements Handler {
     }
 
     private String getDataType(Type fieldType) {
-        if (ClassUtil.isNumber(fieldType.qualifiedTypeName())) {
+        if (ClassTypeHelper.isNumber(fieldType.qualifiedTypeName())) {
             return "number";
-        } else if (ClassUtil.isString(fieldType.qualifiedTypeName())) {
+        } else if (ClassTypeHelper.isString(fieldType.qualifiedTypeName())) {
             return "string";
-        } else if (ClassUtil.isBoolean(fieldType.qualifiedTypeName())) {
+        } else if (ClassTypeHelper.isBoolean(fieldType.qualifiedTypeName())) {
             return "boolean";
         }
 

@@ -1,4 +1,4 @@
-package com.swamm.doc;
+package com.swamm.model;
 
 import java.util.List;
 

@@ -1,36 +1,32 @@
 package com.swamm.doc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import com.swamm.xiaoyaoji.XiaoYaoJiHandler;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 import com.alibaba.fastjson.JSON;
 import com.sun.javadoc.*;
-import com.swamm.common.DocletContext;
-import com.swamm.common.DocletLog;
-import com.swamm.common.DocletUtil;
-import com.swamm.common.Tags;
+import com.swamm.common.Logger;
+import com.swamm.model.ClassModel;
+import com.swamm.plat.xiaoyaoji.XiaoYaoJiHandler;
 
 /**
+ * javadoc 主类， 从这里开始解析，类， 方法
  * Created by chengpanwang on 2016/10/19.
  */
 public class Doclet {
 
     public static boolean start(RootDoc root) {
 
-        DocletLog.log("开始解析源代码。。。");
+        Logger.info("开始解析源代码。。。");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         String tagName = readOptions(root.options());
         DocletContext.init(root, tagName);
         writeContents(root, tagName);
 
-        DocletLog.log("解析源代码完成， 耗时：" + stopWatch.getTime() + " ms");
+        Logger.info("解析源代码完成， 耗时：" + stopWatch.getTime() + " ms");
         return true;
     }
 
@@ -42,40 +38,31 @@ public class Doclet {
 
         for (ClassDoc classDoc : classes) {
 
-
             // dubbo 协议
             if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
-
                 // 只解析接口
                 if (!classDoc.isInterface()) {
                     continue;
                 }
 
-            } else {
-                boolean isController = false;
-                for( AnnotationDesc annotationDesc : classDoc.annotations()) {
-                    List<String> controllers = Arrays.asList("org.springframework.web.bind.annotation.RestController", "org.springframework.web.bind.annotation.Controller");
-                    String annotationType = annotationDesc.annotationType().qualifiedTypeName();
-                    if (controllers.contains(annotationType)) {
-                        isController = true;
-                        break;
-                    }
-                }
-                if (!isController) {
+            }
+            // spring mvc
+            else if (Tags.PROTOCOL_CONTROLLER.equals(DocletContext.PROTOCOL)){
+                if (!DocletHelper.isController(classDoc)) {
                     continue;
                 }
+            } else {
+                Logger.info("目前只支持dubbo, spring mvc，其它暂未支持");
+                return;
             }
 
             // http spring mvc 协议
-
-            if (StringUtils.isNotBlank(DocletContext.getOption(Tags.CLASS))) {
-                if (!ArrayUtils.contains(StringUtils.split(DocletContext.getOption(Tags.CLASS), ","), classDoc.simpleTypeName())) {
-                    continue;
-                }
+            if (!DocletHelper.isInclude(classDoc)) {
+                continue;
             }
 
 
-            DocletLog.log("开始解析接口："  + classDoc.qualifiedTypeName());
+            Logger.info("开始解析接口：" + classDoc.qualifiedTypeName());
 
             ClassModel classModel = new ClassModel();
             classModel.setDesc(classDoc.commentText());
@@ -84,13 +71,13 @@ public class Doclet {
             classModel.setUrl(getUrl(classDoc));
             classModels.add(classModel);
 
-            classModel.setMethodModels(DocletUtil.getMethodModels(classDoc));
+            classModel.setMethodModels(DocletHelper.getMethodModels(classDoc));
 
-            DocletLog.log("解析接口："  + classDoc.qualifiedTypeName() + " 完成");
+            Logger.info("解析接口：" + classDoc.qualifiedTypeName() + " 完成");
         }
 
-        DocletLog.log("解析结果：");
-        DocletLog.log(JSON.toJSONString(classModels));
+        Logger.info("解析完成：");
+        Logger.info(JSON.toJSONString(classModels));
 
         new XiaoYaoJiHandler().execute(rootDoc, classModels);
     }
@@ -105,14 +92,14 @@ public class Doclet {
 
 
                         if (elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.value")) {
-                            DocletLog.log("request mapping:" + elementValuePair.value());
+                            Logger.info("request mapping:" + elementValuePair.value());
                             return elementValuePair.value().toString();
                         }
                     }
                 }
             }
         }
-        return null;
+        return "";
     }
 
     private static String readOptions(String[][] options) {

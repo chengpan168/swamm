@@ -1,4 +1,4 @@
-package com.swamm.rap;
+package com.swamm.plat.rap;
 
 import java.io.IOException;
 import java.util.*;
@@ -8,13 +8,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Type;
-import com.swamm.common.ClassUtil;
-import com.swamm.common.DocletContext;
-import com.swamm.common.DocletLog;
+import com.swamm.common.Logger;
+import com.swamm.doc.ClassTypeHelper;
+import com.swamm.doc.DocletContext;
 import com.swamm.common.HttpUtils;
-import com.swamm.doc.ClassModel;
-import com.swamm.doc.FieldModel;
-import com.swamm.doc.MethodModel;
+import com.swamm.model.ClassModel;
+import com.swamm.model.FieldModel;
+import com.swamm.model.MethodModel;
 import com.swamm.handler.Handler;
 
 /**
@@ -144,10 +144,10 @@ public class RapHandler implements Handler {
 
         System.out.println("锁定工程" );
         if (!jsonObject.get("isOk").toString().equals("true")) {
-            DocletLog.log("锁定工程失败");
+            Logger.info("锁定工程失败");
             return;
         } else {
-            DocletLog.log("锁定工程成功");
+            Logger.info("锁定工程成功");
         }
 
         Map<String, String> param = new HashMap<>();
@@ -158,14 +158,14 @@ public class RapHandler implements Handler {
 
         param.put("projectData", JSON.toJSONString(p));
 
-        DocletLog.log("保存工程。。。");
+        Logger.info("保存工程。。。");
 //        System.out.println(JSON.toJSONString(param));
 
         String result = HttpUtils.doPost(host + saveUrl, param);
 
         Map map = JSON.parseObject(res, Map.class);
         if ("true".equals(String.valueOf(map.get("isOk")))) {
-            DocletLog.log("保存工程成功");
+            Logger.info("保存工程成功");
         }
 
     }
@@ -208,7 +208,7 @@ public class RapHandler implements Handler {
         ClassDoc classDoc = fieldType.asClassDoc();
         if (classDoc != null) {
             if (classDoc.subclassOf(DocletContext.getRootDoc().classNamed("java.util.Collection"))) {
-                List<Type> genericType = ClassUtil.getGenericType(fieldType);
+                List<Type> genericType = ClassTypeHelper.getGenericType(fieldType);
                 if (genericType.isEmpty()) {
                     return "array";
                 }
@@ -221,11 +221,11 @@ public class RapHandler implements Handler {
     }
 
     private String getDataType(Type fieldType) {
-        if (ClassUtil.isNumber(fieldType.qualifiedTypeName())) {
+        if (ClassTypeHelper.isNumber(fieldType.qualifiedTypeName())) {
             return "number";
-        } else if (ClassUtil.isString(fieldType.qualifiedTypeName())) {
+        } else if (ClassTypeHelper.isString(fieldType.qualifiedTypeName())) {
             return "string";
-        } else if (ClassUtil.isBoolean(fieldType.qualifiedTypeName())) {
+        } else if (ClassTypeHelper.isBoolean(fieldType.qualifiedTypeName())) {
             return "boolean";
         }
 

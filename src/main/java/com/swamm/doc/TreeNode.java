@@ -1,6 +1,6 @@
 package com.swamm.doc;
 
-import com.swamm.common.DocletLog;
+import com.swamm.model.FieldModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,14 +104,14 @@ public class TreeNode {
             parent = parent.getParent();
         }
 
-//        DocletLog.debug("===========" + list);
+//        Logger.debug("===========" + list);
 
         FieldModel fieldModelTemp = null;
         for (int i = list.size() - 1; i >= 0; i--) {
             TreeNode  node = list.get(i);
 
 
-//            DocletLog.debug("===========" + node.getName());
+//            Logger.debug("===========" + node.getName());
             if (i == list.size() - 1) {
                 fieldModelTemp = node.getFieldModel();
 
@@ -121,7 +121,7 @@ public class TreeNode {
                 continue;
             }
 
-//            DocletLog.debug("===========" + fieldModelTemp.getName());
+//            Logger.debug("===========" + fieldModelTemp.getName());
 
 
             if (fieldModelTemp.getInnerFields() == null || fieldModelTemp.getInnerFields().size() == 0) {
@@ -166,25 +166,5 @@ public class TreeNode {
         return "TreeNode{" + "fieldModel=" + fieldModel + ", name='" + name + '\'' + '}';
     }
 
-
-    /*
-    public List<FieldModel> getFieldModels() {
-        TreeNode parent = getParent();
-        FieldModel outterFieldModel;
-        while (parent != null) {
-            List<FieldModel> fieldModels = fieldModel.getInnerFields();
-            if (fieldModels == null || fieldModels.size() == 0) {
-                return Collections.emptyList();
-            }
-
-            for (FieldModel fieldModel : fieldModels) {
-                if (fieldModel.getName().equals(parent.getName())) {
-                    outterFieldModel = fieldModel;
-                }
-            }
-        }
-
-        return null;
-    }*/
 
 }

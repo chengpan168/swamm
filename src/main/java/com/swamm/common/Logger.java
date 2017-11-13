@@ -1,11 +1,13 @@
 package com.swamm.common;
 
+import com.swamm.doc.DocletContext;
+
 /**
  * Created by chengpanwang on 2016/10/21.
  */
-public class DocletLog {
+public class Logger {
 
-    public static void log(Object obj) {
+    public static void info(Object obj) {
         System.out.println("INFO    " + obj);
 
     }
@@ -14,9 +16,5 @@ public class DocletLog {
         if (DocletContext.LOG_LEVEL.isDebug()) {
             System.out.println("DEBUG   " + obj);
         }
-    }
-
-    public static void info(Object obj) {
-        System.out.println("INFO    " + obj);
     }
 }

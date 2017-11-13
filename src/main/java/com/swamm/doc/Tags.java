@@ -1,4 +1,4 @@
-package com.swamm.common;
+package com.swamm.doc;
 
 /**
  * Created by chengpanwang on 2016/10/21.

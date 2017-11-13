@@ -1,4 +1,4 @@
-package com.swamm.rap;
+package com.swamm.plat.rap;
 
 import java.util.List;
 

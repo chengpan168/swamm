@@ -1,9 +1,9 @@
-package com.swamm.common;
+package com.swamm.doc;
 
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.ParameterizedType;
 import com.sun.javadoc.Type;
-import com.swamm.doc.GenericType;
+import com.swamm.common.Logger;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Created by chengpanwang on 2016/10/20.
  */
-public class ClassUtil {
+public class ClassTypeHelper {
 
     private static Map<Object, Object> primitiveWrapperMap = new HashMap();
     private static Map<Object, Object> simpleTypeMap       = new HashMap();
@@ -83,7 +83,7 @@ public class ClassUtil {
             return Collections.emptyMap();
         }
 
-        DocletLog.log("获取类型泛型信息：" + type);
+        Logger.info("获取类型泛型信息：" + type);
         ClassDoc classDoc = type.asClassDoc();
         ParameterizedType parameterizedType = type.asParameterizedType();
         if (parameterizedType == null) {
@@ -108,7 +108,7 @@ public class ClassUtil {
 
 
         if (genericTypeMap.size() > 0) {
-            DocletLog.log("使用泛型：" + genericTypeMap);
+            Logger.info("使用泛型：" + genericTypeMap);
         }
 
         return genericTypeMap;
@@ -131,7 +131,7 @@ public class ClassUtil {
         }
 
         List<Type> genericTypeList = Arrays.asList(parameterizedType.typeArguments());
-        DocletLog.log("获取类型泛型信息：" + type + ", 泛型：" + genericTypeList);
+        Logger.info("获取类型泛型信息：" + type + ", 泛型：" + genericTypeList);
         return genericTypeList;
 
     }
