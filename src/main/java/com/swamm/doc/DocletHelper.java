@@ -2,12 +2,13 @@ package com.swamm.doc;
 
 import java.util.*;
 
-import com.swamm.common.Logger;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.sun.javadoc.*;
+import com.swamm.common.Logger;
 import com.swamm.model.FieldModel;
 import com.swamm.model.MethodModel;
 
@@ -21,9 +22,10 @@ public class DocletHelper {
      * @param classDoc
      * @return
      */
-    public static boolean isController (ClassDoc classDoc) {
-        for( AnnotationDesc annotationDesc : classDoc.annotations()) {
-            List<String> controllers = Arrays.asList("org.springframework.web.bind.annotation.RestController", "org.springframework.web.bind.annotation.Controller");
+    public static boolean isController(ClassDoc classDoc) {
+        for (AnnotationDesc annotationDesc : classDoc.annotations()) {
+            List<String> controllers = Arrays.asList("org.springframework.web.bind.annotation.RestController",
+                                                     "org.springframework.web.bind.annotation.Controller");
             String annotationType = annotationDesc.annotationType().qualifiedTypeName();
             if (controllers.contains(annotationType)) {
                 return true;
@@ -32,6 +34,11 @@ public class DocletHelper {
         return false;
     }
 
+    /**
+     * 是否包含在指定class中， 没有指定，解析全部类
+     * @param classDoc
+     * @return
+     */
     public static boolean isInclude(ClassDoc classDoc) {
         if (CollectionUtils.isEmpty(DocletContext.INCLUDE_CLASS)) {
             return true;
@@ -39,14 +46,38 @@ public class DocletHelper {
         return DocletContext.INCLUDE_CLASS.contains(classDoc.simpleTypeName());
     }
 
+    /**
+     * 1. dubbo 所有方法
+     * 2. spring mvc 是不是带有 @RequestMapping
+     * @param methodDoc
+     * @return
+     */
+    public static boolean isRequestMapping(MethodDoc methodDoc) {
+        if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
+            return true;
+        } else {
+            for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
+                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取类下面所有方法模型
+     * @param classDoc
+     * @return
+     */
     public static List<MethodModel> getMethodModels(ClassDoc classDoc) {
 
         if (classDoc == null || classDoc.methods() == null || classDoc.methods().length == 0) {
-            Logger.info("接口下方法定义!");
+            Logger.info("接口下没有方法定义!");
             return Collections.emptyList();
         }
 
-        List<MethodModel> methodModels = new ArrayList<MethodModel>(classDoc.methods().length);
+        List<MethodModel> methodModels = Lists.newArrayListWithCapacity(classDoc.methods().length);
         for (MethodDoc methodDoc : classDoc.methods()) {
             Logger.info("解析方法：" + methodDoc);
 
@@ -58,8 +89,9 @@ public class DocletHelper {
             MethodModel methodModel = new MethodModel();
             methodModel.setDesc(methodDoc.commentText());
             methodModel.setName(methodDoc.name());
-            methodModel.setUrl(getUrl(methodDoc));
+            methodModel.setUrl(methodPath(methodDoc));
 
+            // title优先级 : @title > comment > methodName
             Tag[] tags = methodDoc.tags(Tags.TITLE);
             if (tags != null && tags.length > 0) {
                 methodModel.setTitle(tags[0].text());
@@ -74,7 +106,7 @@ public class DocletHelper {
             methodModels.add(methodModel);
 
             // 参数解析
-            methodModel.setParamModels(DocletHelper.getParam(methodDoc));
+            methodModel.setParamModels(getMethodParam(methodDoc));
 
             // 返回参数解新
             methodModel.setReturnModel(getReturnModel(methodDoc));
@@ -84,36 +116,20 @@ public class DocletHelper {
         return methodModels;
     }
 
-    private static String getUrl(MethodDoc methodDoc) {
+    /**
+     * 获取path
+     * 1. dubbo 方法名
+     * 2. spring mvc @RequestMapping 的值
+     * @param methodDoc
+     * @return
+     */
+    public static String methodPath(MethodDoc methodDoc) {
         if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
             return "/" + methodDoc.qualifiedName();
-        } else {
-            for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
-                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
-                    for (AnnotationDesc.ElementValuePair elementValuePair : annotationDesc.elementValues()) {
-                        if (elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.value")
-                         || elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.path")) {
-                            Logger.info("request mapping:" + elementValuePair.value());
-                            return elementValuePair.value().toString();
-                        }
-                    }
-                }
-            }
+        } else if (Tags.PROTOCOL_CONTROLLER.equals(DocletContext.PROTOCOL)) {
+            return SpringMVCHelper.getRequestMappingPath(methodDoc.annotations());
         }
-        return "";
-    }
-
-    public static boolean isRequestMapping(MethodDoc methodDoc) {
-        if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
-            return true;
-        } else {
-            for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
-                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return StringUtils.EMPTY;
     }
 
     public static FieldModel getReturnModel(MethodDoc methodDoc) {
@@ -176,7 +192,6 @@ public class DocletHelper {
         return getFieldModel(parentType, fieldModel, genericTypeMap, node);
     }
 
-
     public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap, TreeNode node) {
         Logger.info("当前路径：" + node.path());
 
@@ -236,7 +251,6 @@ public class DocletHelper {
                     Logger.info("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
                     fields = getAllField(parentType);
 
-
                 }
                 // 复杂类型
                 else {
@@ -264,18 +278,16 @@ public class DocletHelper {
 
         if (fields != null && fields.size() > 0) {
             for (FieldDoc innerFieldDoc : fields) {
-//                Logger.debug("----------属性名称：" + innerFieldDoc.name());
-//                Logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
+                //                Logger.debug("----------属性名称：" + innerFieldDoc.name());
+                //                Logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
 
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
                 }
                 List<FieldModel> customFieldModels = null;
-                if(node.getCurrentFieldModel() != null) {
+                if (node.getCurrentFieldModel() != null) {
                     customFieldModels = node.getCurrentFieldModel().getInnerFields();
                 }
-
-
 
                 if (customFieldModels == null || customFieldModels.size() == 0) {
                     fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
@@ -320,11 +332,9 @@ public class DocletHelper {
      * @param methodDoc
      * @return
      */
-    public static List<FieldModel> getParam(MethodDoc methodDoc) {
+    public static List<FieldModel> getMethodParam(MethodDoc methodDoc) {
 
         Logger.info("开始解析方法参数：" + methodDoc);
-
-
 
         Parameter[] parameters = methodDoc.parameters();
 
@@ -335,7 +345,7 @@ public class DocletHelper {
 
         List<FieldModel> customFields = getCustomField(methodDoc);
 
-        List<FieldModel> paramModels = new ArrayList<FieldModel>();
+        List<FieldModel> paramModels = Lists.newArrayList();
         for (Parameter param : parameters) {
             Type type = param.type();
 
@@ -354,7 +364,6 @@ public class DocletHelper {
 
             paramModel = getFieldModel(param.type(), paramModel, Collections.emptyMap(), node);
 
-
             /*List<FieldModel> fieldModels = new ArrayList<>();
             for (FieldDoc fieldDoc : getAllField(type)) {
                 if (fieldDoc.isStatic()) {
@@ -363,7 +372,7 @@ public class DocletHelper {
                 fieldModels.add(getFieldModel(param.type(), fieldDoc, Collections.emptyMap(), node));
             }
             paramModel.setInnerFields(fieldModels);
-*/
+            */
             paramModels.add(paramModel);
         }
 
@@ -378,14 +387,12 @@ public class DocletHelper {
      * @return
      */
     public static List<FieldModel> getCustomField(MethodDoc methodDoc) {
-        List<FieldModel> fieldModels = new ArrayList<FieldModel>();
+        List<FieldModel> fieldModels = Lists.newArrayList();
 
         ParamTag[] paramTags = methodDoc.paramTags();
         if (paramTags == null || paramTags.length == 0) {
             return fieldModels;
         }
-
-
 
         Map<String, FieldModel> fieldMap = new HashMap<>();
 
@@ -399,7 +406,6 @@ public class DocletHelper {
                 fieldMap.put(argName, fieldModel);
             }
         }
-
 
         // 把在方法指定的参数 整理成fieldModel 的父子关系
         for (ParamTag paramTag : paramTags) {
@@ -437,8 +443,6 @@ public class DocletHelper {
         return fieldModels;
 
     }
-
-
 
     public static List<FieldModel> getInnerParam(MethodDoc methodDoc, Parameter parameter) {
         if (ClassTypeHelper.isPrimitiveWrapper(parameter.type())) {
@@ -560,8 +564,6 @@ public class DocletHelper {
             }
         }
 
-
-
         List<FieldDoc> fieldDocs = new ArrayList<>();
 
         fieldDocs.addAll(Arrays.asList(classDoc.fields()));
@@ -621,10 +623,8 @@ public class DocletHelper {
             fieldModels.add(fieldModel);
         }
 
-
         return fieldModels;
     }
-
 
     /**
      * 根据参数名取得所有tag定义

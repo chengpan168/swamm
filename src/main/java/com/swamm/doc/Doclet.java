@@ -3,6 +3,7 @@ package com.swamm.doc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 import com.alibaba.fastjson.JSON;
@@ -47,7 +48,7 @@ public class Doclet {
 
             }
             // spring mvc
-            else if (Tags.PROTOCOL_CONTROLLER.equals(DocletContext.PROTOCOL)){
+            else if (Tags.PROTOCOL_CONTROLLER.equals(DocletContext.PROTOCOL)) {
                 if (!DocletHelper.isController(classDoc)) {
                     continue;
                 }
@@ -60,7 +61,6 @@ public class Doclet {
             if (!DocletHelper.isInclude(classDoc)) {
                 continue;
             }
-
 
             Logger.info("开始解析接口：" + classDoc.qualifiedTypeName());
 
@@ -85,21 +85,10 @@ public class Doclet {
     private static String getUrl(ClassDoc classDoc) {
         if (Tags.PROTOCOL_DUBBO.equals(DocletContext.PROTOCOL)) {
             return "/" + classDoc.qualifiedTypeName();
-        } else {
-            for (AnnotationDesc annotationDesc : classDoc.annotations()) {
-                if (annotationDesc.annotationType().qualifiedTypeName().equals("org.springframework.web.bind.annotation.RequestMapping")) {
-                    for (AnnotationDesc.ElementValuePair elementValuePair : annotationDesc.elementValues()) {
-
-
-                        if (elementValuePair.element().qualifiedName().equals("org.springframework.web.bind.annotation.RequestMapping.value")) {
-                            Logger.info("request mapping:" + elementValuePair.value());
-                            return elementValuePair.value().toString();
-                        }
-                    }
-                }
-            }
+        } else if (Tags.PROTOCOL_CONTROLLER.equals(DocletContext.PROTOCOL)) {
+            return SpringMVCHelper.getRequestMappingPath(classDoc.annotations());
         }
-        return "";
+        return StringUtils.EMPTY;
     }
 
     private static String readOptions(String[][] options) {

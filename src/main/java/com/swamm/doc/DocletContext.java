@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Lists;
@@ -46,7 +47,7 @@ public class DocletContext {
         }
 
         LOG_LEVEL = LogLevel.fromCode(optionMap.get("logLevel"));
-        PROTOCOL = optionMap.get("protocol");
+        PROTOCOL = MapUtils.getString(optionMap, "protocol", "controller");
 
         String includeClass = optionMap.get(Tags.CLASS);
         if (StringUtils.isNotBlank(includeClass)) {

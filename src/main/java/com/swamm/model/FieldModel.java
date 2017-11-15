@@ -106,7 +106,6 @@ public class FieldModel {
             return null;
         }
 
-
         if (innerFields == null) {
             innerFields = new ArrayList<>();
         }
