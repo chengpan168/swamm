@@ -17,6 +17,8 @@ public class Tags {
     public static final String PROTOCOL            = "protocol";
     public static final String PROJECT_ID          = "projectId";
     public static final String HOST                = "host";
+    public static final String EMAIL               = "email";
+    public static final String PASSWORD            = "password";
 
     public static final String PROTOCOL_CONTROLLER = "controller";
     public static final String PROTOCOL_DUBBO      = "dubbo";

@@ -104,8 +104,8 @@ public class XiaoYaoJiHandler implements Handler {
     }
 
     public String login() {
-        String email = "chengpanwang@shining3d.com";
-        String password = "123456";
+        String email = DocletContext.getOption(Tags.EMAIL);
+        String password = DocletContext.getOption(Tags.PASSWORD);
 
         Map<String, String> param = Maps.newHashMap();
         param.put("email", email);
