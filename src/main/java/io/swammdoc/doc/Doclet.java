@@ -29,13 +29,13 @@ public class Doclet {
         stopWatch.start();
         String tagName = readOptions(root.options());
         DocletContext.init(root, tagName);
-        writeContents(root, tagName);
+        writeContents(root);
 
         Logger.info("解析源代码完成， 耗时：" + stopWatch.getTime() + " ms");
         return true;
     }
 
-    private static void writeContents(RootDoc rootDoc, String tagName) {
+    private static void writeContents(RootDoc rootDoc) {
 
         ClassDoc[] classes = rootDoc.classes();
 
@@ -83,7 +83,7 @@ public class Doclet {
         Logger.info("解析完成：");
         Logger.info(JSON.toJSONString(classModels));
 
-        new XiaoYaoJiHandler().execute(rootDoc, classModels);
+//        new XiaoYaoJiHandler().execute(rootDoc, classModels);
     }
 
     private static String getUrl(ClassDoc classDoc) {

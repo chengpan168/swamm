@@ -11,11 +11,14 @@ import com.sun.javadoc.*;
 import io.swammdoc.common.Logger;
 import io.swammdoc.model.FieldModel;
 import io.swammdoc.model.MethodModel;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by chengpanwang on 2016/10/20.
  */
 public class DocletHelper {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DocletHelper.class);
 
     /**
      * 有RestController， Controller 注解才是spring mvc的controller
@@ -73,13 +76,13 @@ public class DocletHelper {
     public static List<MethodModel> getMethodModels(ClassDoc classDoc) {
 
         if (classDoc == null || classDoc.methods() == null || classDoc.methods().length == 0) {
-            Logger.info("接口下没有方法定义!");
+            logger.info("接口下没有方法定义!");
             return Collections.emptyList();
         }
 
         List<MethodModel> methodModels = Lists.newArrayListWithCapacity(classDoc.methods().length);
         for (MethodDoc methodDoc : classDoc.methods()) {
-            Logger.info("解析方法：" + methodDoc);
+            logger.info("解析方法：" + methodDoc);
 
             if (!isRequestMapping(methodDoc)) {
                 continue;
@@ -111,7 +114,7 @@ public class DocletHelper {
             // 返回参数解新
             methodModel.setReturnModel(getReturnModel(methodDoc));
 
-            Logger.info("解析方法完成：" + JSON.toJSONString(methodModel));
+            logger.info("解析方法完成：" + JSON.toJSONString(methodModel));
         }
         return methodModels;
     }
@@ -132,8 +135,10 @@ public class DocletHelper {
         return StringUtils.EMPTY;
     }
 
+
+
     public static FieldModel getReturnModel(MethodDoc methodDoc) {
-        Logger.info("开始解析返回参数：" + methodDoc);
+        logger.info("开始解析返回参数：" + methodDoc);
         Type type = methodDoc.returnType();
         if (type.qualifiedTypeName().equals("void")) {
             return null;
@@ -181,23 +186,23 @@ public class DocletHelper {
         // 设置属性类型，或者是泛型
         if (genericTypeMap.containsKey(fieldDoc.type().qualifiedTypeName())) {
             Type type = genericTypeMap.get(fieldDoc.type().qualifiedTypeName());
-            Logger.info("类型：" + parentTypeName + "，子属性: " + fieldDoc.name() + "使用了泛型：" + type);
+            logger.info("类型：" + parentTypeName + "，子属性: " + fieldDoc.name() + "使用了泛型：" + type);
             fieldModel.setType(type);
         } else {
             fieldModel.setType(fieldDoc.type());
         }
 
-        Logger.info("获取属性子属性: " + fieldDoc.name() + "， 父类：" + parentTypeName + "");
+        logger.info("获取属性子属性: " + fieldDoc.name() + "， 父类：" + parentTypeName + "");
 
         return getFieldModel(parentType, fieldModel, genericTypeMap, node);
     }
 
     public static FieldModel getFieldModel(Type parentType, FieldModel fieldModel, Map<String, Type> genericTypeMap, TreeNode node) {
-        Logger.info("当前路径：" + node.path());
+        logger.info("当前路径：" + node.path());
 
         String parentTypeName = parentType.qualifiedTypeName();
         if (node.deep() > DocletContext.FIELD_DEEP) {
-            Logger.info("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 递归深度超过：" + DocletContext.FIELD_DEEP);
+            logger.info("类型：" + parentTypeName + "，子属性: " + fieldModel.getName() + " 递归深度超过：" + DocletContext.FIELD_DEEP);
         } else {
             if (!isGetInnerField(fieldModel.getType())) {
                 fieldModel.setInnerFields(getInnerField(fieldModel, genericTypeMap, node));
@@ -217,7 +222,7 @@ public class DocletHelper {
         // 检查属性类型是不是泛型
         if (genericTypeMap.containsKey(type.qualifiedTypeName())) {
             type = genericTypeMap.get(type.qualifiedTypeName());
-            Logger.info("获取属性：" + name + ", 子属性, 使用了泛型：" + type);
+            logger.info("获取属性：" + name + ", 子属性, 使用了泛型：" + type);
         } else {
             //ignore
         }
@@ -236,7 +241,7 @@ public class DocletHelper {
 
                 // 如果是基本类型
                 if (ClassTypeHelper.isPrimitiveWrapper(genericType)) {
-                    Logger.info("集合属性：" + name + "，泛型是基本类型：" + genericType);
+                    logger.info("集合属性：" + name + "，泛型是基本类型：" + genericType);
                 }
 
                 // 集合使用了泛型 private List<T> result;
@@ -244,11 +249,11 @@ public class DocletHelper {
                     parentType = genericTypeMap.get(genericType.qualifiedTypeName());
 
                     if (ClassTypeHelper.isCollection(parentType)) {
-                        Logger.info("集合属性：" + name + " ，是泛型集合类型：" + parentType);
+                        logger.info("集合属性：" + name + " ，是泛型集合类型：" + parentType);
                         return Arrays.asList(getFieldModel(parentType, new FieldModel(parentType), genericTypeMap, node.addChildren(name)));
                     }
 
-                    Logger.info("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
+                    logger.info("集合属性：" + name + " ，是泛型复杂类型：" + parentType);
                     fields = getAllField(parentType);
 
                 }
@@ -256,30 +261,30 @@ public class DocletHelper {
                 else {
 
                     if (ClassTypeHelper.isCollection(genericType.asClassDoc())) {
-                        Logger.info("集合属性：" + name + " ，是集合类型：" + genericType);
+                        logger.info("集合属性：" + name + " ，是集合类型：" + genericType);
                         return Arrays.asList(getFieldModel(parentType, new FieldModel(genericType), genericTypeMap, node.addChildren(name)));
                     }
 
-                    Logger.info("集合属性：" + name + " ，是复杂类型：" + genericType);
+                    logger.info("集合属性：" + name + " ，是复杂类型：" + genericType);
                     fields = getAllField(genericType);
                     parentType = genericType;
                 }
 
             } else {
-                Logger.info("集合属性：" + name + " 泛型没有指定：" + type);
+                logger.info("集合属性：" + name + " 泛型没有指定：" + type);
             }
 
         }
 
         else {
-            Logger.info("获取属性：" + name + ", 子属性， 属性类型：" + type);
+            logger.info("获取属性：" + name + ", 子属性， 属性类型：" + type);
             fields = getAllField(type);
         }
 
         if (fields != null && fields.size() > 0) {
             for (FieldDoc innerFieldDoc : fields) {
-                //                Logger.debug("----------属性名称：" + innerFieldDoc.name());
-                //                Logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
+                //                logger.debug("----------属性名称：" + innerFieldDoc.name());
+                //                logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
 
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
@@ -294,7 +299,7 @@ public class DocletHelper {
                 } else {
                     for (FieldModel customFieldMode : customFieldModels) {
                         if (innerFieldDoc.name().equals(customFieldMode.getName())) {
-                            Logger.debug("从node中取得指定的属性,用于过滤不需要的属性：" + innerFieldDoc.name() + " , " + JSON.toJSONString(customFieldModels));
+                            logger.debug("从node中取得指定的属性,用于过滤不需要的属性：" + innerFieldDoc.name() + " , " + JSON.toJSONString(customFieldModels));
                             fieldModels.add(getFieldModel(parentType, innerFieldDoc, genericTypeMap, node.addChildren(innerFieldDoc.name())));
                         }
                     }
@@ -334,7 +339,7 @@ public class DocletHelper {
      */
     public static List<FieldModel> getMethodParam(MethodDoc methodDoc) {
 
-        Logger.info("开始解析方法参数：" + methodDoc);
+        logger.info("开始解析方法参数：" + methodDoc);
 
         Parameter[] parameters = methodDoc.parameters();
 
@@ -364,15 +369,6 @@ public class DocletHelper {
 
             paramModel = getFieldModel(param.type(), paramModel, Collections.emptyMap(), node);
 
-            /*List<FieldModel> fieldModels = new ArrayList<>();
-            for (FieldDoc fieldDoc : getAllField(type)) {
-                if (fieldDoc.isStatic()) {
-                    continue;
-                }
-                fieldModels.add(getFieldModel(param.type(), fieldDoc, Collections.emptyMap(), node));
-            }
-            paramModel.setInnerFields(fieldModels);
-            */
             paramModels.add(paramModel);
         }
 
@@ -409,7 +405,7 @@ public class DocletHelper {
 
         // 把在方法指定的参数 整理成fieldModel 的父子关系
         for (ParamTag paramTag : paramTags) {
-            Logger.debug("用户指定方法参数属性：" + paramTag.parameterName() + " ," + paramTag.parameterComment());
+            logger.debug("用户指定方法参数属性：" + paramTag.parameterName() + " ," + paramTag.parameterComment());
             String argName = paramTag.parameterName();
             String comment = " " + paramTag.parameterComment();
             String[] childrenFieldNames = comment.split(" ");
@@ -436,7 +432,7 @@ public class DocletHelper {
         fieldModels.addAll(fieldMap.values());
 
         if (fieldModels.size() > 0) {
-            Logger.info("用户指定方法参数属性集合：" + JSON.toJSON(fieldModels));
+            logger.info("用户指定方法参数属性集合：" + JSON.toJSON(fieldModels));
 
         }
 
@@ -465,14 +461,14 @@ public class DocletHelper {
             innerParamModels.add(paramModel);
         }
 
-        Logger.info("参数：" + parameter + " 不是基本类型，解析内部参数：" + JSON.toJSONString(innerParamModels));
+        logger.info("参数：" + parameter + " 不是基本类型，解析内部参数：" + JSON.toJSONString(innerParamModels));
 
         return innerParamModels;
 
     }
 
     public static List<FieldDoc> getFilterField(MethodDoc methodDoc, Parameter parameter) {
-        Logger.info("获取过滤需要的属性参数");
+        logger.info("获取过滤需要的属性参数");
         List<FieldDoc> fieldDocs = getAllField(parameter.type());
 
         if (fieldDocs == null || fieldDocs.size() == 0) {
@@ -502,9 +498,9 @@ public class DocletHelper {
 
         boolean isSpecialField = needTag.size() > 0;
         if (isSpecialField) {
-            Logger.info("用户指定接口参数：" + needTag);
+            logger.info("用户指定接口参数：" + needTag);
         } else {
-            Logger.info("用户未指定接口参数， 使用参数类的属性定义");
+            logger.info("用户未指定接口参数， 使用参数类的属性定义");
         }
 
         List<FieldDoc> resultFieldDocs = new ArrayList<>();
@@ -540,7 +536,7 @@ public class DocletHelper {
     }
 
     public static List<FieldDoc> getAllField(Type type) {
-        Logger.info("获取所有属性：" + type);
+        logger.info("获取所有属性：" + type);
         if (type == null) {
             return Collections.emptyList();
         }
@@ -556,9 +552,9 @@ public class DocletHelper {
 
         // 如果参数是集合，获取泛型字段
         if (ClassTypeHelper.isCollection(type)) {
-            Logger.info("获取所有属性: " + type + ",是集合类型");
+            logger.info("获取所有属性: " + type + ",是集合类型");
             List<Type> genericTypes = ClassTypeHelper.getGenericType(type);
-            Logger.info("获取所有属性: " + type + ", 泛型：" + genericTypes);
+            logger.info("获取所有属性: " + type + ", 泛型：" + genericTypes);
             if (genericTypes.size() > 0) {
                 classDoc = genericTypes.get(0).asClassDoc();
             }

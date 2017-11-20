@@ -1,5 +1,6 @@
 package io.swammdoc.doc;
 
+import com.google.common.collect.Maps;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.ParameterizedType;
 import com.sun.javadoc.Type;
@@ -94,7 +95,7 @@ public class ClassTypeHelper {
             return Collections.emptyMap();
         }
 
-        Map<String, Type> genericTypeMap = new HashMap<>();
+        Map<String, Type> genericTypeMap = Maps.newHashMap();
 
 
         for (int i = 0; i < parameterizedType.typeArguments().length; i++) {

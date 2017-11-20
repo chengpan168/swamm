@@ -26,7 +26,7 @@ import io.swammdoc.model.FieldModel;
  */
 public class XiaoYaoJiHandler implements Handler {
 
-    String                      host      = "http://doc.3dker.cn";
+    String                      host      = "";
     String                      token;
     String                      projectId = "1hW7GG48X8";
     String                      moduleId  = "";

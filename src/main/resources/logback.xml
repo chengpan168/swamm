@@ -2,13 +2,13 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoder 默认配置为PatternLayoutEncoder -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%-5level %logger{20}-%line %msg%n</pattern>
         </encoder>
     </appender>
 
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>boot.log</File>
+        <File>swammdoc.log</File>
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>
@@ -24,16 +24,7 @@
         </layout>
     </appender>
 
-    <!--logback.LogbackDemo：类的全路径 -->
-    <logger name="java.sql" level="DEBUG" additivity="false">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
-    </logger>
-    <logger name="hello" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
     </root>
 </configuration>
