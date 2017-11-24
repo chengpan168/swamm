@@ -83,7 +83,7 @@ public class Doclet {
         Logger.info("解析完成：");
         Logger.info(JSON.toJSONString(classModels));
 
-//        new XiaoYaoJiHandler().execute(rootDoc, classModels);
+        new XiaoYaoJiHandler().execute(rootDoc, classModels);
     }
 
     private static String getUrl(ClassDoc classDoc) {

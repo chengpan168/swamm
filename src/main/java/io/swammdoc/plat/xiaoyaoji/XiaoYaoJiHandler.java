@@ -104,7 +104,7 @@ public class XiaoYaoJiHandler implements Handler {
     }
 
     public String login() {
-        String email = DocletContext.getOption(Tags.EMAIL);
+        String email = DocletContext.getOption(Tags.NAME);
         String password = DocletContext.getOption(Tags.PASSWORD);
 
         Map<String, String> param = Maps.newHashMap();
