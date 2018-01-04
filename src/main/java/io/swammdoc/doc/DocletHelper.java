@@ -4,14 +4,14 @@ import java.util.*;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.sun.javadoc.*;
-import io.swammdoc.common.Logger;
+
 import io.swammdoc.model.FieldModel;
 import io.swammdoc.model.MethodModel;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by chengpanwang on 2016/10/20.
@@ -135,8 +135,6 @@ public class DocletHelper {
         return StringUtils.EMPTY;
     }
 
-
-
     public static FieldModel getReturnModel(MethodDoc methodDoc) {
         logger.info("开始解析返回参数：" + methodDoc);
         Type type = methodDoc.returnType();
@@ -179,7 +177,8 @@ public class DocletHelper {
         String parentTypeName = parentType.qualifiedTypeName();
 
         FieldModel fieldModel = new FieldModel();
-
+//        logger.info("wrwereqrewrqrewr {}， {}", "2324324", 2342434);
+//        logger.info("wwwwwwwwwwwwwwwwww {}， {}， {}   ", JSON.toJSONString(fieldDoc), fieldDoc.name(), fieldDoc.commentText(), fieldDoc.getRawCommentText());
         fieldModel.setDesc(StringUtils.defaultIfBlank(fieldDoc.commentText(), fieldDoc.name()));
         fieldModel.setName(fieldDoc.name());
 
@@ -283,8 +282,10 @@ public class DocletHelper {
 
         if (fields != null && fields.size() > 0) {
             for (FieldDoc innerFieldDoc : fields) {
-                //                logger.debug("----------属性名称：" + innerFieldDoc.name());
-                //                logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
+//                                logger.debug("----------属性名称：" + innerFieldDoc.name());
+//                                logger.debug("----------属性名称：" + innerFieldDoc.commentText());
+//                                logger.debug("----------属性名称：" + innerFieldDoc.getRawCommentText());
+//                                logger.debug("node的属性：" + JSON.toJSONString(node.getName()));
 
                 if (isFieldIgnore(innerFieldDoc)) {
                     continue;
@@ -341,6 +342,7 @@ public class DocletHelper {
 
         logger.info("开始解析方法参数：" + methodDoc);
 
+        // 方法的参数 method(String a, String b) ->  [a, b]
         Parameter[] parameters = methodDoc.parameters();
 
         // 参数

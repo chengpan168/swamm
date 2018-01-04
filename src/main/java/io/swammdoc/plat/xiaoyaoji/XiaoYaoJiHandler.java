@@ -168,7 +168,7 @@ public class XiaoYaoJiHandler implements Handler {
         for (FieldModel fieldModel : fieldModels) {
             XyjParameter parameter = new XyjParameter();
             parameter.setDescription(fieldModel.getDesc());
-            parameter.setName(i++ + ":" + fieldModel.getDesc());
+            parameter.setName(i++ + ":" + fieldModel.getName());
 
             parameter.setType(getDataType(fieldModel));
 
