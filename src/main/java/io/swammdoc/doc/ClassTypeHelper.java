@@ -44,6 +44,7 @@ public class ClassTypeHelper {
 
         // 数字
         numberTypeMap.put(Short.class.getName(), Short.class);
+        numberTypeMap.put(BigDecimal.class.getName(), BigDecimal.class);
         numberTypeMap.put(Integer.class.getName(), Integer.class);
         numberTypeMap.put(Long.class.getName(), Long.class);
         numberTypeMap.put(Double.class.getName(), Double.class);
